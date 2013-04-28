@@ -125,3 +125,7 @@ def cleanse_quoted_strings(line):
             unquoted_string.append(char)
 
     return "".join(unquoted_string)
+
+import os.path
+def resolve_path(path):
+    return os.path.abspath(os.path.expanduser(path))
