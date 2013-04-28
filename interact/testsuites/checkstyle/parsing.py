@@ -29,7 +29,6 @@ class Block:
     def _to_str_list(self, indent_level = 0):
         result = [("\t" * indent_level) + repr(i) for i in self.lines]
         for i in self.sub_blocks:
-            print repr(i)
             result += i._to_str_list(indent_level = indent_level + 1)
 
         return result
