@@ -1,6 +1,8 @@
 # Copyright (c) 2013 Galah Group LLC
 # Copyright (c) 2013 Other contributers as noted in the CONTRIBUTERS file
 #
+# This file is part of galah-interact-python.
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 #
@@ -90,7 +92,7 @@ def indentation(code, max_score = 10, allow_negative = False):
             dscore = -len(problems),
             type = "interact/indentation/basic_indent_level"
         ))
-    
+
     # The score is just the sum of the dscores for each message plus the max
     # score (since dscores are negative this makes sense).
     score = max_score + sum(i.dscore for i in result.messages)

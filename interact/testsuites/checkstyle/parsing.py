@@ -1,6 +1,8 @@
 # Copyright (c) 2013 Galah Group LLC
 # Copyright (c) 2013 Other contributers as noted in the CONTRIBUTERS file
 #
+# This file is part of galah-interact-python.
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 #
@@ -12,7 +14,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import interact._utils as _utils
 
 class Block:
@@ -49,7 +50,7 @@ class Line:
     def indent_level(self):
         """
         Determine the indentation level of the current line. Does this by
-        counting the number of tabs and spaces at the start of the line and 
+        counting the number of tabs and spaces at the start of the line and
         adding the two numbers together. If the line is blank (not including
         white space), None is returned.
 
