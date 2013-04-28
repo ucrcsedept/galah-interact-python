@@ -19,7 +19,10 @@ import interact._utils as _utils
 class Block:
     """Represents a block of code."""
 
-    def __init__(self, lines, sub_blocks):
+    def __init__(self, lines, sub_blocks = None):
+        if sub_blocks is None:
+            sub_blocks = []
+
         self.lines = lines
         self.sub_blocks = sub_blocks
 
