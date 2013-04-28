@@ -1,6 +1,8 @@
 # Copyright (c) 2013 Galah Group LLC
 # Copyright (c) 2013 Other contributers as noted in the CONTRIBUTERS file
 #
+# This file is part of galah-interact-python.
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 #
