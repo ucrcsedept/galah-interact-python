@@ -20,7 +20,7 @@ import interact._utils as _utils
 import re
 from parsing import Block, Line, grab_blocks
 
-def indentation(code, max_score = 10, allow_negative = False):
+def indentation(code, file_name, max_score = 10, allow_negative = False):
     """
     Given a chunk of code as a string, this function will determine if the
     student indented properly. Returns a TestResult object.
@@ -83,12 +83,13 @@ def indentation(code, max_score = 10, allow_negative = False):
     problems = check(blocks)
     if problems:
         result.add_message(interact.TestResult.Message(
-            "{lines_} {line_numbers_} {are_} not indented more than the outer "
-                "block.",
+            "{lines_} {line_numbers_} in {file_name} {are_} not indented more "
+                "than the outer block.",
             line_numbers_ = _utils.pretty_list(i.line_number for i in problems),
             are_ = "are" if len(problems) > 1 else "is",
             lines_ = _utils.plural_if("Line", problems),
             lines = problems,
+            file_name = file_name,
             dscore = -len(problems),
             type = "interact/indentation/basic_indent_level"
         ))
