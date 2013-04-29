@@ -62,7 +62,7 @@ class Harness:
             import json
             self.sheep_data = json.load(sys.stdin)
 
-    def finish(self, score = 0, max_score = 0):
+    def finish(self, score = None, max_score = None):
         """
         Marks the end of the test harness. When start was not initialized via
         command line arguments, this command will print out the test results in
@@ -70,6 +70,20 @@ class Harness:
         for Galah to read.
 
         """
+
+        if score is None or max_score is None:
+            new_score = 0
+            new_max_score = 0
+            for i in self.tests.values():
+                if i is not None:
+                    new_score += i.result.score
+                    new_max_score += i.result.max_score
+
+            if score is None:
+                score = new_score
+
+            if max_score is None:
+                max_score = new_max_score
 
         if len(sys.argv) == 4 and sys.argv[1] == "--test":
             for i in self.tests.values():
