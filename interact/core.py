@@ -74,6 +74,16 @@ class TestResult:
         else:
             self.messages.append(TestResult.Message(*args, **kwargs))
 
+    def set_passing(self, passing):
+        self.score = 1 if passing else 0
+        self.max_score = 1
+
+    def is_passing(self):
+        return self.score != 0
+
+    def is_failing(self):
+        return self.score == 0
+
     def __str__(self):
         result = []
 
@@ -100,5 +110,3 @@ class TestResult:
 
     def __repr__(self):
         return _utils.default_repr(self)
-
-
