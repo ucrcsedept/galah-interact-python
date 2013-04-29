@@ -27,10 +27,10 @@ import shutil
 
 to_delete = []
 
-def cleanup():
+def _cleanup():
     for i in to_delete:
         shutil.rmtree(i)
-atexit.register(cleanup)
+atexit.register(_cleanup)
 
 def load_cpp_files(cpp_files):
     module_dict = {}
