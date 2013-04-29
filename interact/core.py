@@ -84,11 +84,19 @@ class TestResult:
     def is_failing(self):
         return self.score == 0
 
-    def __str__(self):
+    def to_galah_dict(self, name):
+        return {
+            "name": name,
+            "score": 0 if self.score is None else self.score,
+            "max_score": 0 if self.max_score is None else self.max_score,
+            "message": self.to_str(show_score = False)
+        }
+
+    def to_str(self, show_score = True):
         result = []
 
         quick_status = ""
-        if self.score is not None:
+        if show_score and self.score is not None:
             quick_status += "Score: %d" % self.score
 
             if self.max_score is not None and self.max_score != 0:
@@ -107,6 +115,9 @@ class TestResult:
             result += [self.default_message, ""]
 
         return "\n".join(result[:-1])
+
+    def __str__(self):
+        return self.to_str()
 
     def __repr__(self):
         return _utils.default_repr(self)
