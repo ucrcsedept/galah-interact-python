@@ -16,3 +16,4 @@
 # limitations under the License.
 
 from core import TestResult
+from idempotent import Harness
