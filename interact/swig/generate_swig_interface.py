@@ -37,7 +37,7 @@ def generate_swig_interface(cpp_file = 'main.cpp', output_directory = '.'):
 
     # -MM flag returns all dependencies needed to compile file.
     p = Popen(['g++', '-MM', cpp_file], stdout=PIPE)
-    
+
     # Get dependencies, minus the .o file and the white space
     depend_string = p.communicate()[0]
     depend_string = depend_string.split(':')[1].strip()
@@ -71,7 +71,7 @@ def generate_swig_interface(cpp_file = 'main.cpp', output_directory = '.'):
 
     # SWIG cannot import global include like iostream, but it does need
     # all local includes
-    local_includes = (include for include in necessary_includes 
+    local_includes = (include for include in necessary_includes
                       if '<' not in include)
     for include in local_includes:
         f.write('%s\n' % include.replace('#', '%'))
