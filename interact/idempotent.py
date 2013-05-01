@@ -76,8 +76,11 @@ class Harness:
             new_max_score = 0
             for i in self.tests.values():
                 if i is not None:
-                    new_score += i.result.score
-                    new_max_score += i.result.max_score
+                    if i.result.score:
+                        new_score += i.result.score
+
+                    if i.result.max_score:
+                        new_max_score += i.result.max_score
 
             if score is None:
                 score = new_score
