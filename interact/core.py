@@ -51,7 +51,7 @@ class TestResult:
 
     def __init__(
             self, brief = None, score = None, max_score = None, messages = None,
-            default_message = None):
+            default_message = None, bulleted_messages = True):
         if messages is None:
             messages = []
 
@@ -60,6 +60,7 @@ class TestResult:
         self.max_score = max_score
         self.messages = messages
         self.default_message = default_message
+        self.bulleted_messages = bulleted_messages
 
     def add_message(self, *args, **kwargs):
         """
@@ -109,7 +110,10 @@ class TestResult:
 
         if self.messages:
             for i in self.messages:
-                result.append(" * " + str(i))
+                if self.bulleted_messages:
+                    result.append(" * " + str(i))
+                else:
+                    result.append(str(i))
             result.append("")
         elif self.default_message:
             result += [self.default_message, ""]
