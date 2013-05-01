@@ -75,6 +75,29 @@ class TestResult:
         else:
             self.messages.append(TestResult.Message(*args, **kwargs))
 
+    def calculate_score(self, starting_score = None, max_score = None):
+        """
+        Automatically calculates the score by adding up the dscore fields of
+        every message.
+
+        If max_score is None, self.max_score is used.
+
+        If starting_score is None, max_score is used.
+
+        """
+        if max_score is None:
+            max_score = self.max_score
+
+        if starting_score is None:
+            starting_score = max_score
+
+        self.score = starting_score
+        self.max_score = max_score
+
+        for i in self.messages:
+            if i.dscore is not None:
+                self.score += i.dscore
+
     def set_passing(self, passing):
         self.score = 1 if passing else 0
         self.max_score = 1
