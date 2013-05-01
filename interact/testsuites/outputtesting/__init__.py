@@ -16,3 +16,4 @@
 # limitations under the License.
 
 from compilation import check_compiles
+from runprogram import run_program

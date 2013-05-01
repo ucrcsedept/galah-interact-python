@@ -30,8 +30,7 @@ import shutil
 _cache = {}
 def _cleanup():
     for i in _cache.values():
-        print "Deleting", os.path.dirname(i)
-        # shutil.rmtree(os.path.dirname(i))
+        shutil.rmtree(os.path.dirname(i))
 atexit.register(_cleanup)
 
 def create_compile_command(files, flags):
@@ -62,7 +61,7 @@ def compile_program(files, flags = [], ignore_cache = False):
     # If we've already compiled these files don't do it again
     file_tuple = tuple(sorted(files))
     if not ignore_cache and file_tuple in _cache:
-        return (None, _cache(file_tuple))
+        return (None, _cache[file_tuple])
 
     temp_dir = tempfile.mkdtemp()
 
