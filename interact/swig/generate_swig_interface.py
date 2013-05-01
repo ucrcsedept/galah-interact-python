@@ -23,6 +23,12 @@ from subprocess import Popen, PIPE
 std_interfaces = ['std_deque.i', 'std_list.i', 'std_map.i', 'std_pair.i',
                   'std_set.i', 'std_string.i', 'std_vector.i']
 
+# C++ Directives that expose extra functionality in the underlying C++ code
+exposure_directives = [
+    '#define private public', # Expose private member variables to module
+    '#define class struct' # Expose unmarked private member variables
+]
+
 def generate_swig_interface(cpp_file = 'main.cpp', output_directory = '.'):
     """
     Generates a SWIG Interface file (.i) that can be compiled with SWIG to
@@ -63,12 +69,11 @@ def generate_swig_interface(cpp_file = 'main.cpp', output_directory = '.'):
     for interface in std_interfaces:
         f.write('%%include "%s"\n' % interface)
 
-    f.write('#define private public\n\n')
-    f.write('#define class struct\n\n')
+    # Write directives inside and out of wrapper for consistency in wrapped file
+    f.write('\n'.join(exposure_directives) + '\n')
     f.write('using namespace std;\n\n')
     f.write('%{\n')
-    f.write('#define private public\n\n')
-    f.write('#define class struct\n\n')
+    f.write('\n'.join(exposure_directives) + '\n')
     for include in necessary_includes:
         f.write('%s\n' % include)
     f.write('%}\n\n')
