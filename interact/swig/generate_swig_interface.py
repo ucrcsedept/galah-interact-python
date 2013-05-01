@@ -63,8 +63,12 @@ def generate_swig_interface(cpp_file = 'main.cpp', output_directory = '.'):
     for interface in std_interfaces:
         f.write('%%include "%s"\n' % interface)
 
+    f.write('#define private public\n\n')
+    f.write('#define class struct\n\n')
     f.write('using namespace std;\n\n')
     f.write('%{\n')
+    f.write('#define private public\n\n')
+    f.write('#define class struct\n\n')
     for include in necessary_includes:
         f.write('%s\n' % include)
     f.write('%}\n\n')
