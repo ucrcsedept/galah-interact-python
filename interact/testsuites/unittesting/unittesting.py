@@ -24,6 +24,7 @@ import inspect
 
 import atexit
 import shutil
+import tempfile
 
 to_delete = []
 
@@ -36,11 +37,7 @@ def load_cpp_files(cpp_files):
     module_dict = {}
     modules = []
 
-    temp_dir = resolve_path('.') + '/tmp'
-    try:
-        os.makedirs(temp_dir)
-    except OSError:
-        pass
+    temp_dir = tempfile.mkdtemp()
     os.chdir(temp_dir)
 
     for f in cpp_files:

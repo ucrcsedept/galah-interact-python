@@ -17,10 +17,17 @@
 
 import os, re
 from interact._utils import resolve_path
+from subprocess import Popen, PIPE
 
 # These are necessary to allow STL types in python
 std_interfaces = ['std_deque.i', 'std_list.i', 'std_map.i', 'std_pair.i',
                   'std_set.i', 'std_string.i', 'std_vector.i']
+
+# C++ Directives that expose extra functionality in the underlying C++ code
+exposure_directives = [
+    '#define private public', # Expose private member variables to module
+    '#define class struct' # Expose unmarked private member variables
+]
 
 def generate_swig_interface(cpp_file = 'main.cpp', output_directory = '.'):
     """
@@ -32,28 +39,24 @@ def generate_swig_interface(cpp_file = 'main.cpp', output_directory = '.'):
     output_directory = resolve_path(output_directory)
     module_name = cpp_file.split('/')[-1].strip('.cpp')
     module_path = resolve_path(cpp_file[:cpp_file.find(module_name)])
-    include_finder = re.compile(r'#include (.*)')
     necessary_includes = []
 
-    # Get all necessary includes and generate .cpp includes if a .h include
-    # is found.
-    f = open(cpp_file, 'r')
-    includes = (line for line in f if '#include' in line)
-    for line in includes:
-        match_include = include_finder.match(line)
-        include = match_include.group(1).replace('"', '')
-        if "<" not in include:
-            necessary_includes.append('#include "%s/%s"' % (module_path, include))
+    # -MM flag returns all dependencies needed to compile file.
+    p = Popen(['g++', '-MM', cpp_file], stdout=PIPE)
 
-        if '.h' in include or '.hpp' in include:
+    # Get dependencies, minus the .o file and the white space
+    depend_string = p.communicate()[0]
+    depend_string = depend_string.split(':')[1].strip()
+    dependencies = depend_string.split(' ')[::2]
+
+    for include in dependencies:
+        necessary_includes.append('#include "%s"' % (include))
+        if '.h' in include:
             include = include.replace('.hpp', '.h')
             include = include.replace('.h', '.cpp')
-            if cpp_file not in include:
-                necessary_includes.append('#include "%s/%s"' %
-                                          (module_path, include))
-    f.close()
 
-    necessary_includes.append('#include "%s"' %  cpp_file)
+            if cpp_file not in include and os.path.isfile(include):
+                necessary_includes.append('#include "%s"' % (include))
 
     # Now, generate SWIG interface file.
     try:
@@ -66,15 +69,18 @@ def generate_swig_interface(cpp_file = 'main.cpp', output_directory = '.'):
     for interface in std_interfaces:
         f.write('%%include "%s"\n' % interface)
 
+    # Write directives inside and out of wrapper for consistency in wrapped file
+    f.write('\n'.join(exposure_directives) + '\n')
     f.write('using namespace std;\n\n')
     f.write('%{\n')
+    f.write('\n'.join(exposure_directives) + '\n')
     for include in necessary_includes:
         f.write('%s\n' % include)
     f.write('%}\n\n')
 
     # SWIG cannot import global include like iostream, but it does need
     # all local includes
-    local_includes = (include for include in necessary_includes 
+    local_includes = (include for include in necessary_includes
                       if '<' not in include)
     for include in local_includes:
         f.write('%s\n' % include.replace('#', '%'))
