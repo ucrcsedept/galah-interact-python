@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from interact._utils import *
-import interact_test.testcore as testcore
+import interact.parse
+import testcore
 
 import unittest
 class TestIndentChecking(unittest.TestCase):
@@ -26,7 +26,11 @@ class TestIndentChecking(unittest.TestCase):
             ("", ""),
             ("""'""""""hi'hi""", "hi"),
             ("''''''''''''''''", ""),
-            ('""""""""""""""""', "")
+            ('""""""""""""""""', ""),
+            ("I am the 'destroyer \" of muffins'", "I am the "),
+            ('Duck "duck\\\" duck" go', "Duck  go")
         )
 
-        testcore.test_cases(self, test_cases, cleanse_quoted_strings)
+        testcore.test_cases(
+        	self, test_cases, interact.parse.cleanse_quoted_strings
+        )
