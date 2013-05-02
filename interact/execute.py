@@ -20,6 +20,76 @@ import subprocess
 import compilation
 import shutil
 import os
+import os.path
+import interact.core
+import atexit
+
+# Create and set up cleanup code for the cache. The cache stores as keys a
+# sorted (alphabetically) tuple of the absolute file paths used to create the
+# executable whose absolute path is stored in the value. The directory,
+# as returned by os.path.dirname will be deleted once the program exits.
+_cache = {}
+def _cleanup():
+    for i in _cache.values():
+        shutil.rmtree(os.path.dirname(i))
+atexit.register(_cleanup)
+
+def create_compile_command(files, flags):
+    """
+    From a list of files and flags, crafts a list suitable to pass into
+    subprocess.Popen to compile those files.
+
+    """
+
+    return ["g++"] + flags + ["-o", "main"] + files
+
+def compile_program(files, flags = [], ignore_cache = False):
+    """
+    Compiles the provided code files. If ignore_cache is False and the program
+    has already been compiled with this function, it will not be compiled
+    again.
+
+    Returns a two-tuple with the compiler output first and an absolute path to
+    the executable second. If the executable was loaded from the cache, the
+    compiler output will be None. If the program did not compile, the path will
+    be None.
+
+    Note that this function blocks for as long it takes to compile the files
+    (unless of course the results are loaded from the cache).
+
+    """
+
+    # If we've already compiled these files don't do it again
+    file_tuple = tuple(sorted(files))
+    if not ignore_cache and file_tuple in _cache:
+        return (None, _cache[file_tuple])
+
+    temp_dir = tempfile.mkdtemp()
+
+    try:
+        # We want to always override the name of the output file otherwise we
+        # won't know what it's named (though we could try to detect it if it
+        # becomes a desirable features.)
+        command = create_compile_command(files, flags)
+
+        compiler_job = subprocess.Popen(
+            command,
+            cwd = temp_dir,
+            stdout = subprocess.PIPE,
+            stderr = subprocess.STDOUT
+        )
+
+        compiler_job.wait()
+        if compiler_job.returncode != 0:
+            return (compiler_job.stdout.read(), None)
+
+        executable_path = os.path.join(temp_dir, "main")
+        _cache[file_tuple] = executable_path
+
+        return (compiler_job.stdout.read(), executable_path)
+    except:
+        shutil.rmtree(temp_dir)
+        raise
 
 def default_run_func(executable, temp_dir):
     """
