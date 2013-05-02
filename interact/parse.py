@@ -114,7 +114,7 @@ def grab_blocks(lines):
     for line in lines:
         # Remove all quoted strings from the line, that way when we search for
         # a curly brace we know it's an actual curly brace.
-        stripped_line = _utils.cleanse_quoted_strings(line.code)
+        stripped_line = cleanse_quoted_strings(line.code)
 
         # Will be set to true if the the current line is in the current block.
         include_current_line = False

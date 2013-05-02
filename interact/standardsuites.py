@@ -25,12 +25,12 @@ indentation or checking to see if the correct files were submitted.
 import os
 import interact
 import interact._utils as _utils
-import interact
-import interact._utils as _utils
+import interact.pretty as pretty
+import interact.execute as execute
 import re
-from parsing import Block, Line, grab_blocks
+from parse import Block, Line, grab_blocks
+from execute import compile_program
 import interact.core
-import interact._utils as _utils
 import tempfile
 import subprocess
 import os.path
@@ -133,9 +133,9 @@ def indentation(code, file_name, max_score = 10, allow_negative = False):
         result.add_message(interact.TestResult.Message(
             "{lines_} {line_numbers_} in {file_name} {are_} not indented more "
                 "than the outer block.",
-            line_numbers_ = _utils.pretty_list(i.line_number for i in problems),
+            line_numbers_ = pretty.pretty_list(i.line_number for i in problems),
             are_ = "are" if len(problems) > 1 else "is",
-            lines_ = _utils.plural_if("Line", problems),
+            lines_ = pretty.plural_if("Line", problems),
             lines = problems,
             file_name = file_name,
             dscore = -len(problems),
@@ -157,7 +157,7 @@ def check_compiles(files, flags = [], ignore_cache = False):
         files, flags = flags, ignore_cache = ignore_cache
     )
 
-    command = _utils.craft_shell_command(create_compile_command(files, flags))
+    command = pretty.craft_shell_command(execute.create_compile_command(files, flags))
     result = interact.core.TestResult(
         brief = "This test ensures that your code compiles without errors. "
                 "Your program was compiled with %s." % (command, ),
