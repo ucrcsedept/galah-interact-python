@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import interact
-from interact.testsuites import *
 import os.path
 
 harness = interact.Harness()
@@ -11,11 +10,11 @@ student_files = harness.student_files("main.cpp")
 
 @harness.test("Proper files exist.")
 def check_files():
-    return checkfiles.check_files_exist(*student_files)
+    return interact.standardtests.check_files_exist(*student_files)
 
 @harness.test("Program compiles correctly.", depends = [check_files])
 def check_compilation():
-    return outputtesting.check_compiles(student_files)
+    return interact.standardtests.check_compiles(student_files)
 
 @harness.test("Program prints out hello world.", depends = [check_compilation])
 def check_output():
@@ -27,7 +26,8 @@ def check_output():
 		max_score = 10
 	)
 
-	output, stderr, return_code = outputtesting.run_program(student_files)
+	output, stderr, return_code = \
+		interact.execute.run_program(student_files)
 
 	# Get a list of lines in the output, ignoring any blank lines.
 	output_lines = [i for i in output.splitlines() if i]

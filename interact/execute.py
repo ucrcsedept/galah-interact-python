@@ -134,7 +134,7 @@ def run_program(files = None, given_input = "", run_func = None,
 
     # Compile the given files if we weren't given an executable.
     if executable is None:
-        compile_output, executable = compilation.compile_program(files)
+        compile_output, executable = compile_program(files)
         if not executable:
             raise RuntimeError("Program did not compile.")
 

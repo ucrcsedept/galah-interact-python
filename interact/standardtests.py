@@ -34,6 +34,7 @@ import _utils
 import core
 import pretty
 import parse
+import execute
 
 def check_files_exist(*files):
     """
@@ -151,12 +152,15 @@ def indentation(code, file_name, max_score = 10, allow_negative = False):
 
 def check_compiles(files, flags = [], ignore_cache = False):
     # Try to compile the program
-    compiler_output, executable_path = compile_program(
+    compiler_output, executable_path = execute.compile_program(
         files, flags = flags, ignore_cache = ignore_cache
     )
 
-    command = _utils.craft_shell_command(create_compile_command(files, flags))
-    result = interact.core.TestResult(
+    command = pretty.craft_shell_command(
+        execute.create_compile_command(files, flags)
+    )
+
+    result = core.TestResult(
         brief = "This test ensures that your code compiles without errors. "
                 "Your program was compiled with %s." % (command, ),
         default_message = "**Great job!** Your code compiled cleanly without "
