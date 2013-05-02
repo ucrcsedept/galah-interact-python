@@ -151,9 +151,9 @@ class TestResult:
     def __repr__(self):
         return _utils.default_repr(self)
 
-class FailedDependencies(core.TestResult):
+class FailedDependencies(TestResult):
     def __init__(self, max_score = 10):
-        core.TestResult.__init__(
+        TestResult.__init__(
             self,
             brief = "This test will only be run if all of the other tests it "
                     "depends on pass first. Fix those tests *before* worrying "
