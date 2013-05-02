@@ -105,7 +105,7 @@ def default_run_func(executable, temp_dir):
 
     return subprocess.Popen(
         [executable],
-        cwd = os.path.dirname(executable),
+        cwd = temp_dir,
         stdout = subprocess.PIPE,
         stdin = subprocess.PIPE
     )
