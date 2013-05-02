@@ -15,6 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Test suites that perform full testing on input, returning TestResult objects.
+These are typical tests that many harnesses need to perform. Such as checking
+indentation or checking to see if the correct files were submitted.
+
+"""
+
 import os
 import interact
 import interact._utils as _utils
