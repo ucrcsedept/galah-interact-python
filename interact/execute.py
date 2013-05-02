@@ -17,7 +17,6 @@
 
 import tempfile
 import subprocess
-import compilation
 import shutil
 import os
 import os.path

@@ -33,6 +33,7 @@ import shutil
 import _utils
 import core
 import pretty
+import parse
 
 def check_files_exist(*files):
     """
@@ -86,10 +87,10 @@ def indentation(code, file_name, max_score = 10, allow_negative = False):
     """
 
     # Transform the code into a list of Line objects
-    lines = Line.make_lines(code.splitlines())
+    lines = parse.Line.make_lines(code.splitlines())
 
     # Break the code up into blocks.
-    blocks = grab_blocks(lines)
+    blocks = parse.grab_blocks(lines)
 
     # Recursive helper function.
     def check(block, minimum = None):

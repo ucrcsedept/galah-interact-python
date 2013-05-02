@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import interact
-from interact.testsuites import *
 import os.path
 
 harness = interact.Harness()
@@ -11,7 +10,7 @@ student_files = harness.student_files("main.cpp")
 
 @harness.test("Proper files exist.")
 def check_files():
-    return checkfiles.check_files_exist(*student_files)
+    return interact.standardtests.check_files_exist(*student_files)
 
 @harness.test("Proper indentation is used.", depends = [check_files])
 def check_indentation():
@@ -20,7 +19,7 @@ def check_indentation():
     results = []
     for i in range(len(student_files)):
         results.append(
-            checkstyle.indentation(
+            interact.standardtests.indentation(
                 student_files_text[i],
                 os.path.basename(student_files[i])
             )

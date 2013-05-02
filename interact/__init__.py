@@ -16,3 +16,10 @@
 # limitations under the License.
 
 from core import *
+
+import core
+import pretty
+import unittest
+import execute
+import parse
+import standardtests
