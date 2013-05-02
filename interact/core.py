@@ -15,6 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Functions and classes that are essential when using this library. Is imported
+by core such that `interact.core.x` and `interact.x` is equivalent.
+
+"""
+
 import _utils
 import os.path
 import sys
