@@ -17,6 +17,11 @@ Galah-Interact is to provide a powerful framework for creating excellent
 Test Harnesses no matter what the submission system you are using for your
 class is.
 
+## Examples
+
+Adding tutorials and documentation has not been done yet, but there are
+examples available under `docs/examples/` that is a great place to start.
+
 ## Licensing
 
 The code is licensed under the Apache 2.0 license, which is a very permissive
