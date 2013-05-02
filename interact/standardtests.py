@@ -23,19 +23,16 @@ indentation or checking to see if the correct files were submitted.
 """
 
 import os
-import interact
-import interact._utils as _utils
-import interact
-import interact._utils as _utils
+import os.path
 import re
-from parsing import Block, Line, grab_blocks
-import interact.core
-import interact._utils as _utils
 import tempfile
 import subprocess
-import os.path
 import atexit
 import shutil
+
+import _utils
+import core
+import pretty
 
 def check_files_exist(*files):
     """
@@ -48,16 +45,16 @@ def check_files_exist(*files):
 
     missing_files = [i for i in files if not os.path.isfile(i)]
 
-    result = interact.TestResult(
+    result = core.TestResult(
         brief = "This test ensures that all of the necessary files are "
                 "present.",
         default_message = "Great job! All the necessary files are present."
     )
 
     if missing_files:
-        result.add_message(interact.TestResult.Message(
+        result.add_message(core.TestResult.Message(
             "You are missing {missing_files_}.",
-            missing_files_ = _utils.pretty_list(missing_files),
+            missing_files_ = pretty.pretty_list(missing_files),
             missing_files = missing_files,
             dscore = -1,
             type = "interact/filesexist/basic_files_exist"
@@ -120,7 +117,7 @@ def indentation(code, file_name, max_score = 10, allow_negative = False):
 
         return problems
 
-    result = interact.TestResult(
+    result = core.TestResult(
         brief = "This test checks to ensure you are indenting properly. Make "
                 "sure that every time you start a new block (curly braces "
                 "delimit blocks) you indent more.",
@@ -130,10 +127,10 @@ def indentation(code, file_name, max_score = 10, allow_negative = False):
 
     problems = check(blocks)
     if problems:
-        result.add_message(interact.TestResult.Message(
+        result.add_message(core.TestResult.Message(
             "{lines_} {line_numbers_} in {file_name} {are_} not indented more "
                 "than the outer block.",
-            line_numbers_ = _utils.pretty_list(i.line_number for i in problems),
+            line_numbers_ = pretty.pretty_list(i.line_number for i in problems),
             are_ = "are" if len(problems) > 1 else "is",
             lines_ = _utils.plural_if("Line", problems),
             lines = problems,
