@@ -172,10 +172,10 @@ def check_compiles(files, flags = [], ignore_cache = False):
     # If the compilation failed
     if executable_path is None:
         if compiler_output:
-            compiler_output = _utils.truncate_string(compiler_output)
+            compiler_output = pretty.truncate_string(compiler_output)
 
             result.add_message(
-                "Your code did not compile. The compiler output the following "
+                "Your code did not compile. The compiler outputted the following "
                 "errors:\n\n```\n{compiler_output}\n```\n",
                 compiler_output = compiler_output,
                 dscore = -10
