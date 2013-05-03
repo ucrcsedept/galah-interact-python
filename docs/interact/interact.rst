@@ -32,9 +32,3 @@ Module: standardtests
 
 .. automodule:: interact.standardtests
 	:members:
-
-Module: unittest
--------------------------------
-
-.. automodule:: interact.unittest
-	:members:

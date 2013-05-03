@@ -35,7 +35,6 @@ directory of the git repo.
 from core import *
 
 import pretty
-import unittest
 import execute
 import parse
 import standardtests
