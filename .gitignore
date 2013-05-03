@@ -36,3 +36,9 @@ nosetests.xml
 
 # Credentials cache
 .cache/
+
+# Sphinx
+docs/_build/
+
+# Vim files
+*~
