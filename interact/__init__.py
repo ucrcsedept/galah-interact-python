@@ -17,7 +17,6 @@
 
 from core import *
 
-import core
 import pretty
 import unittest
 import execute

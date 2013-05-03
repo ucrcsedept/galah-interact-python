@@ -134,7 +134,7 @@ def indentation(code, file_name, max_score = 10, allow_negative = False):
                 "than the outer block.",
             line_numbers_ = pretty.pretty_list(i.line_number for i in problems),
             are_ = "are" if len(problems) > 1 else "is",
-            lines_ = _utils.plural_if("Line", problems),
+            lines_ = pretty.plural_if("Line", problems),
             lines = problems,
             file_name = file_name,
             dscore = -len(problems),
