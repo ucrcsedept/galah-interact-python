@@ -16,9 +16,10 @@
 # limitations under the License.
 
 """
-Test suites that perform full testing on input, returning TestResult objects.
-These are typical tests that many harnesses need to perform. Such as checking
-indentation or checking to see if the correct files were submitted.
+This module contains useful test functions that perform full testing on input,
+returning TestResult objects. These are typical tests that many harnesses need
+to perform such as checking indentation or checking to see if the correct files
+were submitted.
 
 """
 
@@ -39,9 +40,28 @@ import execute
 def check_files_exist(*files):
     """
     Checks to see if the given files provided as arguments exist. They must be
-    files as defined by os.path.isfile(). Returns a TestResult.
+    files as defined by
+    `os.path.isfile() <http://docs.python.org/2/library/os.path.html#os.path.isfile>`_.
 
-    The TestResult will be passing if and only if all of the files exist.
+    :param \*files: The files to check for existance. Note this is not a list,
+                   rather you should pass in each file as a seperate arugment.
+                   See the examples below.
+    :returns: Returns a TestResult object that will be passing iff *all* of the
+              files exist.
+
+    .. code-block:: python
+
+        # The current directory contains only a main.cpp file.
+        >>> print check_files_exist("main.cpp", "foo.cpp", "foo.h")
+        Score: 0 out of 1
+
+        This test ensures that all of the necessary files are present.
+
+         * You are missing foo.cpp and foo.h.
+
+    *(Note that this function really does return a TestResult object, but
+    TestResult.__str__() which transforms the TestResult into a string that can
+    be printed formats it specially as seen above)*
 
     """
 
@@ -67,79 +87,94 @@ def check_files_exist(*files):
 
     return result
 
-def indentation(code, file_name, max_score = 10, allow_negative = False):
+def check_indentation(files, max_score = 10, allow_negative = False):
     """
-    Given a chunk of code as a string, this function will determine if the
-    student indented properly. Returns a TestResult object.
+    Checks to see if code is indented properly.
 
-    Tests:
-        * A student's code is correctly indented if every line of each sub-block
-          is indented strictly more than the least indented line on the parent
-          block.
+    Currently code is indented properly iff every block of code is indented
+    strictly more than its parent block.
 
-          If any problems are found, a single TestMessage will be added to the
-          returned TestResult object with type
-          `interact/indentation/basic_indent_level`. The lines property of this
-          message is a list of every Line that had a problem.
+    :param files: A list of file paths that will each be opened and examined.
+    :param max_score: For every improperly indented line of code, a point is
+                      taken off from the total score. The total score starts at
+                      ``max_score``.
+    :param allow_negative: If True, a negative total score will be possible,
+                           if False, 0 will be the lowest score possible.
+    :returns: A ``TestResult`` object.
 
-    Test Result:
-        The test result object that is returned
+    .. code-block:: python
+
+        >>> print open("main.cpp").read()
+        #include <iostream>
+
+        using namespace std;
+
+        int main() {
+            if (true) {
+            foo();
+            } else {
+                dothings();
+                while (false) {
+            dootherthings();
+                }
+                cout << "{}{}{{{{{}}}{}{}{}}}}}}}}{{{{"<< endl;
+        }
+        return 0;
+        }
+
+        >>> print open("foo.cpp").read()
+        #include <iostream>
+
+        using namespace std;
+
+        int main() {
+        return 0;
+        }
+
+        >>> print check_indentation(["main.cpp", "foo.cpp"])
+        Score: 6 out of 10
+
+        This test checks to ensure you are indenting properly. Make sure that every time you start a new block (curly braces delimit blocks) you indent more.
+
+         * Lines 14, 13, and 10 in main.cpp are not indented more than the outer block.
+         * Line 5 in foo.cpp is not indented more than the outer block.
 
     """
-
-    # Transform the code into a list of Line objects
-    lines = parse.Line.make_lines(code.splitlines())
-
-    # Break the code up into blocks.
-    blocks = parse.grab_blocks(lines)
-
-    # Recursive helper function.
-    def check(block, minimum = None):
-        problems = []
-
-        # Check that each line in the current block has an indnetation level
-        # strictly greater than the minimum.
-        for i in block.lines:
-            indent_level = i.indent_level()
-            if minimum is not None and indent_level is not None and \
-                    indent_level <= minimum:
-                problems.append(i)
-
-        # Find the indent level of the least indented line in the current block
-        levels = []
-        for i in block.lines:
-            level = i.indent_level()
-            if level is not None:
-                levels.append(level)
-        new_minimum = min(levels)
-
-        # Recurse into every sub block
-        for i in block.sub_blocks:
-            problems += check(i, new_minimum)
-
-        return problems
 
     result = core.TestResult(
         brief = "This test checks to ensure you are indenting properly. Make "
                 "sure that every time you start a new block (curly braces "
                 "delimit blocks) you indent more.",
-        default_message = "Great job! You have perfect indentation!",
+        default_message = "**Great job!** We didn't find any problems with "
+                          "your indentation!",
         max_score = max_score
     )
 
-    problems = check(blocks)
-    if problems:
-        result.add_message(core.TestResult.Message(
-            "{lines_} {line_numbers_} in {file_name} {are_} not indented more "
-                "than the outer block.",
-            line_numbers_ = pretty.pretty_list(i.line_number for i in problems),
-            are_ = "are" if len(problems) > 1 else "is",
-            lines_ = pretty.plural_if("Line", problems),
-            lines = problems,
-            file_name = file_name,
-            dscore = -len(problems),
-            type = "interact/indentation/basic_indent_level"
-        ))
+    for current_file in files:
+        with open(current_file) as f:
+            code = f.read()
+
+        # Transform tjhe code into a list of Line objects
+        lines = parse.Line.make_lines(code.splitlines())
+
+        # Break the code up into blocks.
+        blocks = parse.grab_blocks(lines)
+
+        # Get a list of all the badly indented lines.
+        problems = parse.find_bad_indentation(blocks)
+
+        if problems:
+            result.add_message(core.TestResult.Message(
+                "{lines_} {line_numbers_} in {file_name} {are_} not indented more "
+                    "than the outer block.",
+                line_numbers_ = pretty.pretty_list(sorted([i.line_number for i in problems], reverse = True)),
+                are_ = "are" if len(problems) > 1 else "is",
+                lines_ = pretty.plural_if("Line", len(problems)),
+                lines = problems,
+                file_name = current_file,
+                dscore = -len(problems),
+                type = "interact/indentation/basic_indent_level"
+            ))
 
     # The score is just the sum of the dscores for each message plus the max
     # score (since dscores are negative this makes sense).
@@ -151,6 +186,39 @@ def indentation(code, file_name, max_score = 10, allow_negative = False):
     return result
 
 def check_compiles(files, flags = [], ignore_cache = False):
+    """
+    Attempts to compile some files.
+
+    :param files: A list of paths to files to compile.
+    :param flags: A list of command line arguments to supply to the compiler.
+            Note that ``-o main`` will be added after your arguments.
+    :param ignore_cache: If you ask Galah Interact to compile some files, it
+            will cache the results. The next time you try to compile the same
+            files, the executable that was cached will be used instead. Set
+            this argument to ``True`` if you don't want the cache to be used.
+    :returns: A ``TestResult`` object.
+
+    .. code-block:: python
+
+        >>> print interact.standardtests.check_compiles(["main.cpp", "foo.cpp"])
+        Score: 0 out of 10
+
+        This test ensures that your code compiles without errors. Your program was compiled with g++ -o main /tmp/main.cpp /tmp/foo.cpp.
+
+        Your code did not compile. The compiler outputted the following errors:
+
+        ```
+        /tmp/main.cpp: In function 'int main()':
+        /tmp/main.cpp:7:9: error: 'foo' was not declared in this scope
+        /tmp/main.cpp:9:18: error: 'dothings' was not declared in this scope
+        /tmp/main.cpp:11:19: error: 'dootherthings' was not declared in this scope
+
+        ```
+
+    """
+
+    files = [_utils.resolve_path(i) for i in files]
+
     # Try to compile the program
     compiler_output, executable_path = execute.compile_program(
         files, flags = flags, ignore_cache = ignore_cache
