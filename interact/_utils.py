@@ -17,8 +17,8 @@
 
 def default_repr(obj):
     """
-    Returns a string that would be appropriate to return from a repr() call. The
-    string will be of the form `ClassName(attribute1 = value, ...)`.
+    :returns: A string that would be appropriate to return from a repr() call.
+            The string will be of the form `ClassName(attribute1 = value, ...)`.
 
     """
 
@@ -34,3 +34,14 @@ import os.path
 def resolve_path(path):
     return os.path.abspath(os.path.expanduser(path))
 
+import inspect
+def get_root_script_path():
+    """
+    :returns: An absolute path to the file that is actually being executed.
+            As in if this module is imported by some other module that was
+            imported by a script ``/tmp/bla.py``, this function will return
+            ``/tmp/bla.py``.
+
+    """
+
+    return resolve_path(inspect.stack()[-1][1])

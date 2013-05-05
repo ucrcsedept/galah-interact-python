@@ -168,8 +168,84 @@ class FailedDependencies(TestResult):
             max_score = 10
         )
 
+class UniverseSet(set):
+    """
+    A special ``set`` such that every ``in`` query returns ``True``.
+
+    >>> a = UniverseSet()
+    >>> "hamster" in a
+    True
+    >>> "apple sauce" in a
+    True
+    >>> 3234 in a
+    True
+    >>> "taco" not in a
+    False
+
+    """
+
+    def __init__(self, iterable = None):
+        set.__init__(self, iterable if iterable is not None else [])
+
+    def __contains__(self, item):
+        return True
+
+def json_module():
+    """
+    A handy function that will try to find a suitable JSON module to import and
+    return that module (already loaded).
+
+    Basically, it tries to load the ``json`` module, and if that doesn't exist
+    it tries to load the ``simplejson`` module. If that doesn't exist, a
+    friendly ``ImportError`` is raised.
+
+    """
+
+    try:
+        import json
+    except ImportError:
+        try:
+            import simplejson as json
+        except ImportError:
+            raise ImportError(
+                "Could not load a suitable JSON module. You can try upgrading "
+                "your version of Python or installing the simplejson library."
+            )
+
+    return json
+
+
 class Harness:
+    """
+    An omniscient object responsible for driving the behavior of any Test
+    Harness created using Galah Interact. Create a single one of these when
+    you create your Test Harness and call the ``start()`` method.
+
+    A typical Test Harness will roughly follow the below format.
+
+    .. code-block:: python
+
+        import interact
+        harness = interact.Harness()
+        harness.start()
+
+        # Your code here
+
+        harness.run_tests()
+        harness.finish(max_score = some_number)
+
+    :ivar sheep_data: The "configuration" values received from outside the
+            harness (either from Galah or command line arguments). See
+            :doc:`cli`.
+
+    """
+
     class Test:
+        """
+        Meta information on a single test.
+
+        """
+
         def __init__(self, name, depends, func, result = None):
             self.name = name
             self.depends = depends
@@ -180,24 +256,107 @@ class Harness:
         self.sheep_data = {}
         self.tests = {}
 
-    def start(self):
+    def _parse_arguments(self, args = sys.argv[1:]):
         """
-        Marks the start of the test harness. When no command line arguments are
-        present, this command will block and read JSON in from stdin. If
-        command line arguments are present information will be gathered from
-        them.
+        _parse_arguments(args = sys.argv[1:])
+
+        Parses command line arguments.
+
+        :param args: A list of command line arguments to parse. Should not
+                include the usual zeroeth argument specifying the executable's
+                name.
+        :returns: A two tuple, ``(options, args)``. For the meaning of each item
+                in the tuple, see the documentation for
+                `optparse.OptionParser.parse_args() <http://docs.python.org/2/library/optparse.html#parsing-arguments>`.
 
         """
 
-        if len(sys.argv) == 4 and sys.argv[1] == "--test":
-            self.sheep_data["harness_directory"] = \
-                _utils.resolve_path(sys.argv[2])
+        from optparse import OptionParser, make_option
 
-            self.sheep_data["testables_directory"] = \
-                _utils.resolve_path(sys.argv[3])
-        else:
-            import json
+        option_list = [
+            make_option(
+                "-m", "--mode", dest = "mode", action = "store",
+                default = "galah", choices = ("galah", "test"),
+                help = "Specify the mode of execution the Test Harness is in. "
+                       "Default mode is %default."
+            ),
+            make_option(
+                "-s", "--set-value", dest = "values", action = "append",
+                nargs = 2, metavar = "KEY VALUE",
+                help = "Sets one of the 'configuration' values."
+            )
+        ]
+
+        parser = OptionParser(
+            description =
+                "A test harness created with the Galah Interact library.",
+            option_list = option_list
+        )
+
+        options, args = parser.parse_args(args)
+
+        return (options, args)
+
+    @staticmethod
+    def _guess_values():
+        """
+        Guesses values for the key value pairs in sheep_data. For more
+        information on this check out :doc:`cli`.
+
+        """
+
+        return {
+            "testables_directory": os.getcwd(),
+            "harness_directory": os.path.dirname(_utils.get_root_script_path()),
+            "raw_submission": None,
+            "raw_assignment": None,
+            "raw_harness": None,
+            "actions": UniverseSet()
+        }
+
+    def start(self, arguments = sys.argv[1:]):
+        """
+        start(self, arguments = sys.argv[1:])
+
+        Takes in input from the proper source, initializes the harness with
+        values it needs to function correctly.
+
+        :param arguments: A list of command line arguments that will be read to
+                determine the harness's behavior. See below for more information
+                on this.
+        :returns: ``None``
+
+        .. seealso::
+
+            :doc:`cli`
+
+        """
+
+        options, args = self._parse_arguments(arguments)
+
+        if options.mode == "galah":
+            json = json_module()
             self.sheep_data = json.load(sys.stdin)
+        elif options.mode == "test":
+            self.sheep_data = Harness._guess_values()
+
+            if options.values is not None:
+                JSON_FIELDS = (
+                    "raw_submission", "raw_assignment", "raw_harness", "actions"
+                )
+
+                for k, v in options.values:
+                    value = v
+                    if k in JSON_FIELDS:
+                        json = json_module()
+                        value = json.loads(v)
+
+                    self.sheep_data[k] = value
+        else:
+            raise ValueError(
+                "Execution mode is set to a value that is not recognized: %s",
+                    (options.mode, )
+            )
 
     def finish(self, score = None, max_score = None):
         """
