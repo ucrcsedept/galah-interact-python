@@ -23,7 +23,7 @@ setup(
     keywords = "education framework",
     url = "https://www.github.com/galah-group/galah-interact-python",
     packages = find_packages(),
-    long_description = read("README.md"),
+    long_description = read("README.rst"),
     classifiers = [
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Education",
