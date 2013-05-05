@@ -23,7 +23,8 @@ Getting Started
 ---------------------------------------------
 
 For documentation (including tutorials and reference material) on the library
-check out `our page on ReadTheDocs <http://galah-interact.readthedocs.com>`_.
+check out
+`our page on ReadTheDocs <https://galah-interact.readthedocs.org/en/latest/>`_.
 
 Licensing
 ---------------------------------------------
