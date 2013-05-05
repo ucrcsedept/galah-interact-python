@@ -14,18 +14,7 @@ def check_files():
 
 @harness.test("Proper indentation is used.", depends = [check_files])
 def check_indentation():
-    student_files_text = [open(i).read() for i in student_files]
-
-    results = []
-    for i in range(len(student_files)):
-        results.append(
-            interact.standardtests.indentation(
-                student_files_text[i],
-                os.path.basename(student_files[i])
-            )
-        )
-
-    return results[0]
+    return interact.standardtests.check_indentation(student_files)
 
 harness.run_tests()
 
