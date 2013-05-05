@@ -6,10 +6,9 @@
 Galah Interact
 ==========================================
 
-This is the Galah Interact reference documentation. The purpose of this
-documentation is to serve only as a reference, in depth tutorials and
-examples will not be provided here. For such resources, please look to the
-`wiki on our GitHub page <https://www.github.com/galah-group/galah-interact-python/wiki>`_.
+This is the main documentation for the Galah Interact project. For general
+information on the project, check out the
+`project page on GitHub <https://www.github.com/galah-group/galah-interact-python>`_.
 
 The contents of this site are automatically generated via
 `Sphinx <http://sphinx-doc.org/>`_ based on the Python docstrings throughout
@@ -18,17 +17,26 @@ git repository. If you find an error in the documentation, please report it
 in the bug tracker `here <https://www.github.com/galah-group/galah/issues>`_
 (which we share with the Galah project), or even better, submit a pull request!
 
-Contents:
+Tutorials, Examples, and Guides
+------------------------------------------
+
+If you have not used this library before, you should start your journey by going
+through these tutorials.
+
+.. toctree::
+	:maxdepth: 2
+
+	guides/getting_started
+
+Reference Material
+------------------------------------------
+
+To get documentation on a specific function or module, or if you just want to
+browse through all of what Galah Interact has to offer, check out the below
+pages.
 
 .. toctree::
    :maxdepth: 2
 
    interact/interact
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   interact/cli
