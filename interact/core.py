@@ -17,7 +17,8 @@
 
 """
 Functions and classes that are essential when using this library. Is imported
-by core such that `interact.core.x` and `interact.x` is equivalent.
+by ``interact/__init__.py`` such that `interact.core.x` and `interact.x` are
+equivalent.
 
 """
 
