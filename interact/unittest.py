@@ -113,6 +113,7 @@ STD_INTERFACES = [
 # C++ Directives that expose extra functionality in the underlying C++ code.
 EXPOSURE_DIRECTIVES = [
     "#define private public", # Expose private member variables to module
+    "#define protected public",
     "#define class struct" # Expose unmarked private member variables
 ]
 
