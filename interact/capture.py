@@ -21,6 +21,10 @@ seperate process in order to capture its standard input, output, and error.
 
 """
 
+class _ExceptionCarrier:
+    def __init__(self, exception):
+        self.exception = exception
+
 class CapturedFunction(object):
     """
     The type of object returned by :func:`capture_function`. Provides access to
@@ -78,10 +82,18 @@ class CapturedFunction(object):
         Blocks until the process running the captured function exits (which
         will be when the function returns). Sets ``return_value``.
 
+        If the function raised an exception, this function will raise that
+        exception.
+
         """
 
-        self.return_value = pickle.load(self._returnvalue_pipe)
+        returned = pickle.load(self._returnvalue_pipe)
         os.waitpid(self.pid, 0)
+
+        if isinstance(returned, _ExceptionCarrier):
+            raise returned.exception
+        else:
+            self.return_value = returned
 
 import os
 import multiprocessing
@@ -127,13 +139,21 @@ def capture_function(func, *args, **kwargs):
         os.dup2(pipes["stdout"][1].fileno(), 1)
         os.dup2(pipes["stderr"][1].fileno(), 2)
 
-        return_value = func(*args, **kwargs)
+        try:
+            return_value = func(*args, **kwargs)
 
-        pickle.dump(
-            return_value,
-            pipes["return_value"][1],
-            protocol = pickle.HIGHEST_PROTOCOL
-        )
+            pickle.dump(
+                return_value,
+                pipes["return_value"][1],
+                protocol = pickle.HIGHEST_PROTOCOL
+            )
+        except:
+            raised = sys.exc_info()[0]
+            pickle.dump(
+                _ExceptionCarrier(raised),
+                pipes["return_value"][1],
+                protocol = pickle.HIGHEST_PROTOCOL
+            )
 
         sys._exit(0)
     else:
