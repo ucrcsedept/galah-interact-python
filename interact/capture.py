@@ -155,7 +155,10 @@ def capture_function(func, *args, **kwargs):
                 protocol = pickle.HIGHEST_PROTOCOL
             )
 
-        sys._exit(0)
+        for i in (pipes["stdout"][1], pipes["stderr"][1], pipes["return_value"][1]):
+            i.flush()
+
+        os._exit(0)
     else:
         # We are in the parent process
         return CapturedFunction(

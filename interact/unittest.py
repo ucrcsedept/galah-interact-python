@@ -99,9 +99,9 @@ def _generate_swig_wrappers(interface_files, output_directory):
         # Let swig generate the wrapper files.
         subprocess.check_call(
             [swig_path, "-c++", "-python", "-o", output_file, current_file],
-            cwd = output_directory,
-            stdout = _utils.DEVNULL,
-            stderr = subprocess.STDOUT
+            cwd = output_directory
+            #stdout = _utils.DEVNULL,
+            #stderr = subprocess.STDOUT
         )
 
 # These are necessary to allow STL types in python
@@ -140,7 +140,7 @@ def _generate_swig_interface(file_path, output_directory):
 
     # Get dependencies, minus the .o file and the white space
     gpp_output = gpp_output.split(":")[1].strip()
-    dependencies = gpp_output.split(" ")[::2]
+    dependencies = [i.strip() for i in gpp_output.split(" ") if i.strip() != "\\"]
 
     necessary_includes = []
     for include in dependencies:
