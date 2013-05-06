@@ -32,6 +32,23 @@ class TestResult:
     number of these and then pass them all out of the test harness with a final
     score.
 
+    :ivar brief: A brief description of the test that was run. This will always
+            be displayed to the user.
+    :ivar score: The score the student received from this test.
+    :ivar max_score: The maximum score the student could have received from this
+            test.
+    :ivar messages: A list of :class:`TestResult.Message` objects that will be
+            joined together appropriately and displayed to the user. Use
+            :meth:`add_message` to add to this list.
+    :ivar default_message: A string that will be displayed if there are no
+            messages. Useful to easily create a "good job" message that is shown
+            when no problems were detected.
+    :ivar bulleted_messages: A boolean. If ``True``, all of the messages will be
+            printed out in bullet point form (a message per bullet). If
+            ``False``, they will simply be printed out one-per-line. You can
+            set this to ``False`` if only one message will ever be displayed to
+            the user, otherwise bullet points usually look better.
+
     """
 
     class Message:
@@ -84,16 +101,39 @@ class TestResult:
         else:
             self.messages.append(TestResult.Message(*args, **kwargs))
 
-    def calculate_score(self, starting_score = None, max_score = None):
+    def calculate_score(self, starting_score = None, max_score = None,
+            min_score = None):
         """
-        Automatically calculates the score by adding up the dscore fields of
-        every message.
+        Automatically calculates the score by adding up the ``dscore`` of
+        each message and setting the score of the :class:`TestResult`
+        appropriately.
 
-        If max_score is None, self.max_score is used.
+        :param starting_score: This score is added to the sum of every message's
+                ``dscore``. If ``None``, ``max_score`` is used.
+        :param max_score: The ``max_score`` field of the object is set to this
+                value. If ``None``, the current ``max_score`` is used, i.e. no
+                change is made.
+        :param min_score: If the calculated score is less than this value, this
+                value is used instead.
+        :returns: ``self``. This allows you to return the result of this
+                function from test functions.
 
-        If starting_score is None, max_score is used.
+        >>> a = TestResult(max_score = 4)
+        >>> a.add_message("Foo", dscore = -1)
+        >>> a.add_message("Bar!", dscore = -5)
+        >>> print a.calculate_score().score
+        -2
+        >>> print a.score
+        -2
+        >>> print a.calculate_score(min_score = 0).score
+        0
+        >>> print a.calculate_score(starting_score = 8, max_score = 6).score
+        2
+        >>> print a.max_score
+        6
 
         """
+
         if max_score is None:
             max_score = self.max_score
 
@@ -107,15 +147,64 @@ class TestResult:
             if i.dscore is not None:
                 self.score += i.dscore
 
+        if self.score < min_score:
+            self.score = min_score
+
+        return self
+
     def set_passing(self, passing):
+        """
+        :param passing: Whether the test is passing or not.
+        :returns: ``self``. This allows you to return the result of this
+                function directly, leading to more concise test functions.
+
+        This function sets ``score`` to either 1 (if ``passing`` is ``True``) or
+        0 (if ``passing`` is ``False``). It also sets the ``max_score`` to
+        ``1``.
+
+        .. seealso::
+
+            :meth:`is_passing` and :meth:`is_failing`.
+
+        """
+
         self.score = 1 if passing else 0
         self.max_score = 1
 
+        return self
+
     def is_passing(self):
+        """
+        :returns: ``True`` if the score is not ``0`` (note this function *will*
+                return ``True`` if the score is negative).
+
+        This function is most useful when dealing with a ``TestResult`` that you
+        want to consider either passing or failing, and never anything in
+        between.
+
+        .. seealso::
+
+            :meth:`set_passing` and :meth:`is_failing`.
+
+        """
+
         return self.score != 0
 
     def is_failing(self):
-        return self.score == 0
+        """
+        :returns: The inverse of what :meth:`is_passing` returns.
+
+        This function is most useful when dealing with a ``TestResult`` that you
+        want to consider either passing or failing, and never anything in
+        between.
+
+        .. seealso::
+
+            :meth:`set_passing` and :meth:`is_passing`.
+
+        """
+
+        return not self.is_passing()
 
     def to_galah_dict(self, name):
         return {
@@ -479,7 +568,13 @@ class Harness:
                             to_test = current_test
 
             if to_test is not None:
-                self.tests[to_test.func].result = to_test.func()
+                result = self.tests[to_test.func].result = to_test.func()
+                if not isinstance(result, TestResult):
+                    raise RuntimeError(
+                        "Your test function '%s' did not return a valid "
+                        "TestResult object." % (self.tests[to_test.func].name, )
+                    )
+
                 remaining_tests.remove(to_test.func)
             elif remaining_tests:
                 raise RuntimeError("Cyclic dependencies!")
