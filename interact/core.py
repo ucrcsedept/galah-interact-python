@@ -238,6 +238,9 @@ class Harness:
     :ivar sheep_data: The "configuration" values received from outside the
             harness (either from Galah or command line arguments). See
             :doc:`cli`.
+    :ivar execution_mode: The mode of execution the harness is running in. Is
+            set by :meth:`Harness.start` and is ``None`` before it is set. For
+            information on the different modes, check out :doc:`cli`.
 
     """
 
@@ -256,6 +259,7 @@ class Harness:
     def __init__(self):
         self.sheep_data = {}
         self.tests = {}
+        self.execution_mode = None
 
     def _parse_arguments(self, args = sys.argv[1:]):
         """
@@ -335,6 +339,7 @@ class Harness:
 
         options, args = self._parse_arguments(arguments)
 
+        self.execution_mode = options.mode
         if options.mode == "galah":
             json = json_module()
             self.sheep_data = json.load(sys.stdin)
@@ -385,13 +390,13 @@ class Harness:
             if max_score is None:
                 max_score = new_max_score
 
-        if len(sys.argv) == 4 and sys.argv[1] == "--test":
+        if self.execution_mode == "test":
             for i in self.tests.values():
                 if i.result:
                     print i.result
                     print "-------"
             print "Final result: %d out of %d" % (score, max_score)
-        else:
+        elif self.execution_mode == "galah":
             import json
             results = {
                 "score": score,
@@ -404,6 +409,11 @@ class Harness:
                     results["tests"].append(i.result.to_galah_dict(i.name))
 
             json.dump(results, sys.stdout)
+        else:
+            # A bad execution mode should be detected in the start() function.
+            # This is our fault if a user encounters this (and didn't set
+            # execution_mode themselves).
+            raise AssertionError("Unknown execution mode.")
 
     def test(self, name, depends = None):
         """
