@@ -15,6 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+#: An open file descriptor ready for writing that goes directly to the null file
+#: device (``/dev/null`` on Linux).
+DEVNULL = open(os.devnull, "wb")
+
 def default_repr(obj):
     """
     :returns: A string that would be appropriate to return from a repr() call.
@@ -45,3 +50,41 @@ def get_root_script_path():
     """
 
     return resolve_path(inspect.stack()[-1][1])
+
+import os.path
+def file_name(file_path):
+    """
+    :param file_path: A relative or absolute file path.
+    :returns: The name of the file, without the extension.
+
+    >>> utils.get_file_name("/tmp/applesauce.tgz")
+    "applesauce"
+    >>> utils.get_file_name("../../foo.txt")
+    "foo"
+
+    """
+
+    return os.path.splitext(os.path.basename(file_path))[0]
+
+import os
+import os.path
+def which(program_name):
+    """
+    Simulates the Linux utility ``which``.
+
+    :param program_name: The name of the program to search for, should include
+            any necessary extensions.
+    :returns: An absolute path to the found program.
+
+    This is done by searching for a file with ``program_name`` in the path.
+
+    """
+
+    path = os.environ.get("PATH", "").split(":")
+    for i in path:
+        possible_path = os.path.join(i, program_name)
+
+        if os.path.exists(possible_path):
+            return possible_path
+
+    return None
