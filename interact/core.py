@@ -437,7 +437,7 @@ class Harness:
         while remaining_tests:
             # Figure out the next test to run
             to_test = None
-            for i in remaining_tests:
+            for i in remaining_tests[:]:
                 current_test = self.tests[i]
 
                 # If the current test doesn't have any dependencies, let's run
