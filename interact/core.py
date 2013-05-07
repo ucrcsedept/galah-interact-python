@@ -247,17 +247,6 @@ class TestResult:
     def __repr__(self):
         return _utils.default_repr(self)
 
-class FailedDependencies(TestResult):
-    def __init__(self, max_score = 10):
-        TestResult.__init__(
-            self,
-            brief = "This test will only be run if all of the other tests it "
-                    "depends on pass first. Fix those tests *before* worrying "
-                    "about this one.",
-            score = 0,
-            max_score = 10
-        )
-
 class UniverseSet(set):
     """
     A special ``set`` such that every ``in`` query returns ``True``.
@@ -341,7 +330,7 @@ class Harness:
 
         def __init__(self, name, depends, func, result = None):
             self.name = name
-            self.depends = depends
+            self.depends = [] if depends is None else depends
             self.func = func
             self.result = result
 
@@ -521,65 +510,104 @@ class Harness:
 
         return test_decorator
 
+    class CyclicDependency(RuntimeError):
+        def __init__(self, *args, **kwargs):
+            RuntimeError.__init__(self, *args, **kwargs)
+
+    class FailedDependencies(TestResult):
+        """
+        A special :class:`TestResult` used by :meth:`Harness.run_tests` whenever
+        a test couldn't be run do to one of its dependencies failing.
+
+        .. code-block:: python
+
+            >>> a = interact.Harness.FailedDependencies()
+            >>> a.add_failure("Program compiles")
+            >>> a.add_failure("Program is sane")
+            >>> print a
+            Score: 0 out of 10
+
+            This test will only be run if all of the other tests it depends on pass first. Fix those tests *before* worrying about this one.
+
+             * Dependency *Program compiles* failed.
+             * Dependency *Program is sane* failed.
+
+        """
+
+        def __init__(self, max_score = 10):
+            TestResult.__init__(
+                self,
+                brief = "This test will only be run if all of the other tests it "
+                        "depends on pass first. Fix those tests *before* worrying "
+                        "about this one.",
+                score = 0,
+                max_score = 10
+            )
+
+        def add_failure(self, test_name):
+            """
+            Adds a new failure message to the test result signifying a
+            particular dependency has failed.
+
+            """
+
+            self.add_message(
+                "Dependency *{dependency_name}* failed.",
+                dependency_name = test_name
+            )
+
     def run_tests(self):
         """
         Runs all of the tests the user has registered.
 
-        If there is a cyclic dependency a RuntimeError will be raised.
+        :raises: :class:`Harness.CyclicDependency` if a cyclic dependency exists
+                among the test functions.
+
+        Any tests that can't be run due to failed dependencies will have
+        instances of :class:`Harness.FailedDependencies` as their result.
 
         """
 
-        remaining_tests = list(self.tests.keys())
+        # Do a topological sort with a simple depth-first-search algorithm.
+        # Thank you wikipedia for the pseudocodeand inspiration:
+        # http://en.wikipedia.org/wiki/Topological_sorting
+        temporary_marks = set()
+        permanent_marks = set()
 
-        # Naively execute each test in proper order based on their
-        # dependencies.
-        while remaining_tests:
-            # Figure out the next test to run
-            to_test = None
-            for i in remaining_tests[:]:
-                current_test = self.tests[i]
+        def visit(node):
+            if node in temporary_marks:
+                raise Harness.CyclicDependency(
+                    "One or more cyclic dependencies exist among your test "
+                    "functions."
+                )
 
-                # If the current test doesn't have any dependencies, let's run
-                # it now.
-                if not current_test.depends:
-                    to_test = current_test
-                    break
+            if node not in permanent_marks:
+                # Temporarily mark the node. This is necessary because if we
+                # end up hitting a node that has a temporary mark as we recurse
+                # through the "DAG", it means we have a cycle. Hitting a
+                # permanently marked node when we're recursing is fine because
+                # all that means is two nodes share the same dependency.
+                temporary_marks.add(node)
+
+                dependencies_failed = []
+                for dependency in (self.tests[i] for i in node.depends):
+                    if visit(dependency).result.is_failing():
+                        dependencies_failed.append(dependency)
+
+                temporary_marks.remove(node)
+                permanent_marks.add(node)
+
+                if not dependencies_failed:
+                    node.result = node.func()
                 else:
-                    # Check all the dependencies of the current test, if they
-                    # are all passing, we're done.
-                    for j in current_test.depends:
-                        # If one of the dependencies hasn't been run or it's
-                        # failing
-                        if self.tests[j].result is None:
-                            break
-                        elif self.tests[j].result.is_failing():
-                            if not isinstance(current_test.result,
-                                    FailedDependencies):
-                                current_test.result = FailedDependencies()
+                    node.result = Harness.FailedDependencies()
+                    for i in dependencies_failed:
+                        node.result.add_failure(i.name)
 
-                            current_test.result.add_message(
-                                "Dependency *{dependency_name}* failed.",
-                                dependency_name = self.tests[j].name
-                            )
-                    else:
-                        if isinstance(current_test.result, FailedDependencies):
-                            remaining_tests.remove(current_test.func)
-                        else:
-                            to_test = current_test
+            return node
 
-            if to_test is not None:
-                result = self.tests[to_test.func].result = to_test.func()
-                if not isinstance(result, TestResult):
-                    raise RuntimeError(
-                        "Your test function '%s' did not return a valid "
-                        "TestResult object." % (self.tests[to_test.func].name, )
-                    )
-
-                remaining_tests.remove(to_test.func)
-            elif remaining_tests:
-                raise RuntimeError("Cyclic dependencies!")
-            else:
-                break
+        for test in self.tests.values():
+            visit(test)
 
     def student_file(self, filename):
         """
