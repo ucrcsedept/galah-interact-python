@@ -25,7 +25,7 @@ class _ExceptionCarrier:
     def __init__(self, exception):
         self.exception = exception
 
-class CapturedFunction(object):
+class CapturedFunction:
     """
     The type of object returned by :func:`capture_function`. Provides access to
     a captured function's stdin, stdout, stderr, and return value.
