@@ -340,6 +340,10 @@ def cleanse_quoted_strings(line):
 
     return "".join(unquoted_string)
 
+#: Lines of code to ignore when looking for bad indentation. See
+#: :func:`find_bad_indentation` for more information.
+INDENT_EXCEPTED_LINES = ["public:", "private:", "protected:"]
+
 def find_bad_indentation(block, minimum = None):
     """
     Detects blocks of code that are not indented more than their parent blocks.
@@ -351,6 +355,11 @@ def find_bad_indentation(block, minimum = None):
                     nature.
     :returns: A list of ``Line`` objects where each ``Line`` had a problem with
               its indentation.
+
+    .. note::
+
+        Lines that match (after removing whitespace) lines in
+        :data:`INDENT_EXCEPTED_LINES` will be ignored.
 
     >>> my_block = Block(
     ...     lines = [
@@ -398,6 +407,9 @@ def find_bad_indentation(block, minimum = None):
     # Check that each line in the current block has an indentation level
     # strictly greater than the minimum.
     for i in block.lines:
+        if i.code.strip() in INDENT_EXCEPTED_LINES:
+            continue
+
         indent_level = i.indent_level()
         if minimum is not None and indent_level is not None and \
                 indent_level <= minimum:
@@ -406,6 +418,9 @@ def find_bad_indentation(block, minimum = None):
     # Find the indent level of the least indented line in the current block
     levels = []
     for i in block.lines:
+        if i.code.strip() in INDENT_EXCEPTED_LINES:
+            continue
+
         level = i.indent_level()
         if level is not None:
             levels.append(level)
