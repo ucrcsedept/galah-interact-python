@@ -1,0 +1,10 @@
+---Running bar(3, 4)---
+a: 3 b: 4
+7
+---Creating new Foo objects---
+---Printing get_a() on each foo instance---
+3
+0
+---Printing a_ value directly on each foo instance---
+3
+0

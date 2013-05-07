@@ -39,9 +39,31 @@ import capture
 #: ``None`` if no such file could be found.
 swig_path = _utils.which("swig")
 
-class CouldNotCompile(OSError):
-    def __init__(self, *args, **kwargs):
-        OSError.__init__(self, *args, **kwargs)
+class CouldNotCompile(RuntimeError):
+    """
+    Exception raised when a student's code could not be compiled into a single
+    library file.
+
+    :ivar message: A short message describing the exception.
+    :ivar stderr: The output that was received through standard error. This is
+            output by ``distutils.core.setup``.
+
+    """
+
+    def __init__(self, message, stderr):
+        self.message = message
+        self.stderr = stderr
+        RuntimeError.__init__(self)
+
+    def __str__(self):
+        output = [
+            self.message,
+            "---BEGIN STDERR---",
+            self.stderr,
+            "---END STDERR---"
+        ]
+
+        return "\n".join(output)
 
 def _build_extension(module, mod_ext, working_directory):
     os.chdir(working_directory)
@@ -56,6 +78,8 @@ def _build_extension(module, mod_ext, working_directory):
 def _generate_shared_libraries(modules, wrapper_directory):
     """
     Compiles modules and wrappers to shared libraries using distutils.
+
+    :raises: :class:`CouldNotCompile` if the extension could not be compiled.
 
     """
 
@@ -74,7 +98,10 @@ def _generate_shared_libraries(modules, wrapper_directory):
         except SystemExit:
             # Setup will call exit which can make the running script exit rather
             # suddenly. At least give the user an error with a traceback.
-            raise RuntimeError("Could not compile extension module.")
+            raise CouldNotCompile(
+                "Could not compile extension module.",
+                stderr = captured.stderr.read()
+            )
 
 def _generate_swig_wrappers(interface_files, output_directory):
     """
@@ -203,6 +230,8 @@ def load_files(files):
             or create an instance of that function or class.
 
     :raises: ``EnvironmentError`` if swig is not properly installed.
+    :raises: :class:`CouldNotCompile` if the student's code could not be
+            compiled into a library file.
 
     .. warning::
 

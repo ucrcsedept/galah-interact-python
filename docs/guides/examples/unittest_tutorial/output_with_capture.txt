@@ -1,0 +1,3 @@
+The function returned: 7
+The function wrote to stdout: 'a: 3 b: 4\n'
+The function wrote to stderr: ''

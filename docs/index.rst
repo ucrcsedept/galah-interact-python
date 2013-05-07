@@ -27,6 +27,7 @@ through these tutorials.
 	:maxdepth: 2
 
 	guides/getting_started
+	guides/unittesting
 
 Reference Material
 ------------------------------------------
