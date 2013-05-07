@@ -1,0 +1,25 @@
+Score: 1 out of 1
+
+This test ensures that all of the necessary files are present.
+
+Great job! All the necessary files are present.
+-------
+Score: 10 out of 10
+
+This test ensures that your code compiles without errors. Your program was compiled with g++ -o main /home/john/Projects/galah-interact-python/docs/guides/examples/teaser/main.cpp.
+
+**Great job!** Your code compiled cleanly without any problems.
+-------
+Score: 10 out of 10
+
+This test checks to ensure you are indenting properly. Make sure that every time you start a new block (curly braces delimit blocks) you indent more.
+
+**Great job!** We didn't find any problems with your indentation!
+-------
+Score: 10 out of 10
+
+This test ensures that your `foo` function correctly takes in two integer parameters and returns their sum.
+
+**Great job!** Your function works great!
+-------
+Final result: 31 out of 31

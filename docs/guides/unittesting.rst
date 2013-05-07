@@ -1,18 +1,18 @@
 Unit Testing
 ==========================================
 
-One of the coolest modules in Galah Interact is the :mod:`unittest` module. It
-allows you to "load" any number of C++ files such that all of the native C++
-classes and functions become available as Python classes and functions. This is
-done by leveraging the absolutely fantastic
+One of the most interesting modules in Galah Interact is the
+:mod:`interact.unittest` module. It allows you to "load" any number of C++ files
+such that all of the native C++ classes and functions become available as Python
+classes and functions. This is done by leveraging the absolutely fantastic
 `SWIG library <http://www.swig.org/>`_ which can automatically create bindings
 from C++ to a plethora of other languages. Please give the SWIG project as much
 support as you can as it is really a wonderful product.
 
-In order to use the :mod:`unittest` module, you need to make sure that you have
-SWIG installed, and that you have *Python development headers* installed, both
-of which are probably available through your distribution's package manager
-(``apt-get`` or ``yum`` for example).
+In order to use the :mod:`interact.unittest` module, you need to make sure that
+you have SWIG installed, and that you have *Python development headers*
+installed, both of which are probably available through your distribution's
+package manager (``apt-get`` or ``yum`` for example).
 
 Basic Unit Testing
 ------------------------------------------
@@ -53,6 +53,15 @@ Using this function, we can test the ``bar`` function trivially.
 
 .. literalinclude:: examples/unittest_tutorial/harness_with_capture.py
 
+Note that :func:`capture_function <interact.capture.capture_function>` returns
+a special :class:`CapturedFunction <interact.capture.CapturedFunction>` object.
+You should briefly glance over its documentation to get an understanding of what
+it does and why it exists.
+
 Running the above Python scripts outputs:
 
 .. literalinclude:: examples/unittest_tutorial/output_with_capture.txt
+
+Go ahead and try to play around with :mod:`interact.unittest` and
+:mod:`interact.capture`. There is a lot of very cool things you can do with
+them!

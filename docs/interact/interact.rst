@@ -3,43 +3,43 @@ Interact Framework
 
 .. automodule:: interact
 
-Module: core
+:mod:`interact.core`
 -------------------------------
 
 .. automodule:: interact.core
 	:members:
 
-Module: execute
+:mod:`interact.execute`
 -------------------------------
 
 .. automodule:: interact.execute
 	:members:
 
-Module: parse
+:mod:`interact.parse`
 -------------------------------
 
 .. automodule:: interact.parse
 	:members:
 
-Module: pretty
+:mod:`interact.pretty`
 -------------------------------
 
 .. automodule:: interact.pretty
 	:members:
 
-Module: standardtests
+:mod:`interact.standardtests`
 -------------------------------
 
 .. automodule:: interact.standardtests
 	:members:
 
-Module: unittest
+:mod:`interact.unittest`
 -------------------------------
 
 .. automodule:: interact.unittest
 	:members:
 
-Module: capture
+:mod:`interact.capture`
 -------------------------------
 
 .. automodule:: interact.capture

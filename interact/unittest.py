@@ -19,6 +19,13 @@
 This module contains very useful functions you can use while unittesting
 student's code.
 
+.. note::
+
+    In order to use the :mod:`unittest` module, you need to make sure that you
+    have SWIG installed, and that you have *Python development headers*
+    installed, both of which are probably available through your distribution's
+    package manager (``apt-get`` or ``yum`` for example).
+
 """
 
 import interact._utils as _utils
