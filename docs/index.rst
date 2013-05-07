@@ -37,6 +37,11 @@ Galah Interact is to provide a powerful framework for creating excellent
 test harnesses no matter what the submission system you are using for your
 class is.
 
+**Galah Interact can only test C++ code right now.** We would really like to
+support other languages as well, so if you are interested in using this library
+at your university that teaches using a different language, please let us know
+so we can work with you.
+
 Tutorials, Examples, and Guides
 ------------------------------------------
 
