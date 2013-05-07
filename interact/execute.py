@@ -36,7 +36,15 @@ atexit.register(_cleanup)
 def create_compile_command(files, flags):
     """
     From a list of files and flags, crafts a list suitable to pass into
-    subprocess.Popen to compile those files.
+    ``subprocess.Popen`` to compile those files.
+
+    :param files: A list of files to compile.
+    :param flags: A list of flags to pass onto ``g++``. ``-o main`` will always
+            be passed after these flags.
+    :returns: A list of arguments appropriate to pass onto ``subprocess.Popen``.
+
+    >>> create_compile_command(["main.cpp", "foo.cpp"], ["-Wall", "-Werror])
+    ["g++", "-Wall", "-Werror", "-o", "main", "main.cpp", "foo.cpp"]
 
     """
 
@@ -48,13 +56,28 @@ def compile_program(files, flags = [], ignore_cache = False):
     has already been compiled with this function, it will not be compiled
     again.
 
-    Returns a two-tuple with the compiler output first and an absolute path to
-    the executable second. If the executable was loaded from the cache, the
-    compiler output will be None. If the program did not compile, the path will
-    be None.
+    :param files: A list of files to compile.
+    :param flags: A list of flags to pass to ``g++``. See
+            :func:`create_compile_command` for information on how exactly these
+            are used.
+    :param ignore_cache: If ``True``, the cache will not be used to service this
+            query, even if an already compiled executable exists. See below for
+            more information on the cache.
+    :returns: A two-tuple ``(compiler output, executable path)``. If the
+            executable was loaded from the cache, the compiler output will be
+            ``None``. If the program did not compile successfully, the executable
+            path will be ``None``.
 
-    Note that this function blocks for as long it takes to compile the files
-    (unless of course the results are loaded from the cache).
+    .. note::
+
+        Note that this function blocks for as long as it takes to compile the
+        files (which might be quite some time). Of coures if the executable is
+        loaded from the cache no such long wait time will occur.
+
+    This function caches its results so that if you give it the same files to
+    compile again it will not compile them over again, but rather it will
+    immediately return a prepared executable. The cache is cleared whenever the
+    program exits.
 
     """
 
@@ -92,14 +115,25 @@ def compile_program(files, flags = [], ignore_cache = False):
 
 def default_run_func(executable, temp_dir):
     """
-    Used by the run_program function to create a Popen object that is
-    responsible for running the exectuable. temp_dir will be an absolute path to
-    a temporary directory that can be used as the current working directory. It
-    will be deleted automatically at the end of the run_program function. The
-    executable will not be in the directory.
+    Used by the :func:`run_program` to create a ``Popen`` object that is
+    responsible for running the exectuable.
 
-    This function may be overriden to override the default run_func value used
-    in the run_program function.
+    :param executable: An absolute path to the executable that needs to be run.
+    :param temp_dir: An absolute path to a temporary directory that can be
+            used as the current working directory. It will be deleted
+            automatically at the end of the :func:`run_program` function. The
+            executable will not be in the directory.
+
+    This function may be overriden to override the default ``run_func`` value
+    used in the :func:`run_program` function.
+
+    .. warning::
+
+        You **must** pass in ``subprocess.PIPE`` to the ``Popen`` constructor
+        for the ``stdout`` and ``stdin`` arguments.
+
+    You can use this function as a reference when creating your own run
+    functions to pass into :func:`run_program`.
 
     """
 
@@ -113,10 +147,19 @@ def default_run_func(executable, temp_dir):
 def run_program(files = None, given_input = "", run_func = None,
         executable = None):
     """
-    Executes the given program (if files was specified, the program will be
-    compiled first via the compile_program function) and returns a three-tuple
-    with standard output first, standard error output second, and the return
-    code third (ie: (stdout, stderr, returncode)).
+    Runs a program made up of some code files by first compiling, then
+    executing it.
+
+    :param files: The code files to compile and execute. :func:`compile_program`
+            is used to compile the files, so its caching applies here.
+    :param given_input: Text to feed into the compiled program's standard input.
+    :param run_func: A function responsible for creating the ``Popen`` object
+            that actually runs the program. Defaults to
+            :func:`default_run_func`.
+    :param executable: If you don't need to compile any code you can pass a path
+            to an executable that will be executed directly.
+    :returns: A three-tuple containing the result of the program's execution
+            ``(stdout, stderr, returncode)``.
 
     """
 
