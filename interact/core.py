@@ -25,6 +25,7 @@ are equivalent.
 import _utils
 import os.path
 import sys
+import collections
 
 class TestResult:
     """
@@ -319,6 +320,8 @@ class Harness:
     :ivar execution_mode: The mode of execution the harness is running in. Is
             set by :meth:`Harness.start` and is ``None`` before it is set. For
             information on the different modes, check out :doc:`cli`.
+    :ivar tests: An ``OrderedDict`` mapping test functions to
+            :class:`Harness.Test` objects.
 
     """
 
@@ -336,7 +339,7 @@ class Harness:
 
     def __init__(self):
         self.sheep_data = {}
-        self.tests = {}
+        self.tests = collections.OrderedDict()
         self.execution_mode = None
 
     def _parse_arguments(self, args = sys.argv[1:]):
