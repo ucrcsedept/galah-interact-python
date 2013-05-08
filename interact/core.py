@@ -37,7 +37,7 @@ ORDERED_DICT = dict
 try:
     import collections
     ORDERED_DICT = collections.OrderedDict
-except ImportError:
+except (ImportError, AttributeError):
     try:
         import ordereddict
         ORDERED_DICT = ordereddict.OrderedDict
@@ -356,7 +356,7 @@ class Harness:
 
     def __init__(self):
         self.sheep_data = {}
-        self.tests = collections.OrderedDict()
+        self.tests = ORDERED_DICT()
         self.execution_mode = None
 
     def _parse_arguments(self, args = sys.argv[1:]):

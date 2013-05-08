@@ -95,11 +95,13 @@ def _generate_shared_libraries(modules, wrapper_directory):
     for module in modules:
         so_name = "_%s" % (module, )
         wrapper_file = os.path.join(wrapper_directory, module + "_wrap.cxx")
-        mod_ext = distutils.core.Extension(so_name, sources = [wrapper_file])
+        mod_ext = distutils.core.Extension(
+            str(so_name), sources = [str(wrapper_file)]
+        )
 
         try:
             captured = capture.capture_function(
-                _build_extension, module, mod_ext, wrapper_directory
+                _build_extension, str(module), mod_ext, str(wrapper_directory)
             )
             captured.wait()
         except SystemExit:
