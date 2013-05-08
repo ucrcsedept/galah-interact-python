@@ -424,7 +424,7 @@ def find_bad_indentation(block, minimum = None):
         level = i.indent_level()
         if level is not None:
             levels.append(level)
-    new_minimum = min(levels)
+    new_minimum = min(levels) if levels else minimum
 
     # Recurse into every sub block
     for i in block.sub_blocks:
