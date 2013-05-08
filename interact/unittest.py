@@ -133,9 +133,9 @@ def _generate_swig_wrappers(interface_files, output_directory):
         # Let swig generate the wrapper files.
         subprocess.check_call(
             [swig_path, "-c++", "-python", "-o", output_file, current_file],
-            cwd = output_directory
-            #stdout = _utils.DEVNULL,
-            #stderr = subprocess.STDOUT
+            cwd = output_directory,
+            stdout = _utils.DEVNULL,
+            stderr = subprocess.STDOUT
         )
 
 # These are necessary to allow STL types in python
