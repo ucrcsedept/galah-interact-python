@@ -143,7 +143,7 @@ def _generate_swig_wrappers(interface_files, output_directory):
 # These are necessary to allow STL types in python
 STD_INTERFACES = [
     "std_deque.i", "std_list.i", "std_map.i", "std_pair.i", "std_set.i",
-    "std_string.i", "std_vector.i"
+    "std_string.i", "std_vector.i", "std_sstream.i"
 ]
 
 # C++ Directives that expose extra functionality in the underlying C++ code.
