@@ -25,7 +25,24 @@ are equivalent.
 import _utils
 import os.path
 import sys
-import collections
+
+#: An OrderedDict type. The stdlib's ``collections`` module is searched first,
+#: then the module `ordereddict <https://pypi.python.org/pypi/ordereddict>`_ is
+#: searched, and finally it defaults to a regular ``dict`` (which means that the
+#: order that test results are displayed will be undefined). This is the type of
+#: :class:`Harness.tests <Harness>`. This complexity is required to support
+#: older versions of Python.
+ORDERED_DICT = dict
+
+try:
+    import collections
+    ORDERED_DICT = collections.OrderedDict
+except ImportError:
+    try:
+        import ordereddict
+        ORDERED_DICT = ordereddict.OrderedDict
+    except ImportError:
+        pass
 
 class TestResult:
     """
@@ -320,8 +337,8 @@ class Harness:
     :ivar execution_mode: The mode of execution the harness is running in. Is
             set by :meth:`Harness.start` and is ``None`` before it is set. For
             information on the different modes, check out :doc:`cli`.
-    :ivar tests: An ``OrderedDict`` mapping test functions to
-            :class:`Harness.Test` objects.
+    :ivar tests: A dictionary mapping test functions to
+            :class:`Harness.Test` objects. This is of type :data:`ORDERED_DICT`.
 
     """
 
