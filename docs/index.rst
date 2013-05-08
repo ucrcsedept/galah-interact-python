@@ -6,13 +6,9 @@
 Galah Interact
 ==========================================
 
-This is the main documentation for the Galah Interact project. For general
-information on the project, check out the
-`project page on GitHub <https://www.github.com/galah-group/galah-interact-python>`_.
-
-The contents of this site are automatically generated via
-`Sphinx <http://sphinx-doc.org/>`_ based on the Python docstrings throughout
-the code and the reStructuredText documents in the
+This is the main documentation for the Galah Interact project. The contents of this site are automatically generated via `Sphinx <http://sphinx-doc.org/>`_ based on
+the Python docstrings throughout the code and the reStructuredText documents in
+the
 `docs/ directory <https://github.com/galah-group/galah-interact-python/tree/master/docs>`_
 of the git repository. If you find an error in the documentation, please report
 it in the bug tracker `here <https://www.github.com/galah-group/galah/issues>`__
