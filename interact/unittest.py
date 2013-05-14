@@ -231,7 +231,8 @@ def load_files(files):
     callable from within Python.
 
     :param files: A list of file paths. All of the files will be compiled and
-            loaded together.
+            loaded together. These must be absolute paths, see
+            :meth:`Harness.student_files <interact.core.Harness.student_files>`.
     :returns: A ``dict`` where every file that was passed in is a key in the
             dictionary (without its file extension) and the value is another
             ``dict`` where each key is the name of a function or class in the
