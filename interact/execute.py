@@ -22,6 +22,7 @@ import os
 import os.path
 import interact.core
 import atexit
+import threading
 
 # Create and set up cleanup code for the cache. The cache stores as keys a
 # sorted (alphabetically) tuple of the absolute file paths used to create the
@@ -145,7 +146,7 @@ def default_run_func(executable, temp_dir):
     )
 
 def run_program(files = None, given_input = "", run_func = None,
-        executable = None):
+        executable = None, timeout = None):
     """
     Runs a program made up of some code files by first compiling, then
     executing it.
@@ -185,8 +186,20 @@ def run_program(files = None, given_input = "", run_func = None,
 
     try:
         user_program = run_func(executable, temp_dir)
-
-        stdout, stderr = user_program.communicate(given_input)
+        if timeout is None:
+            stdout, stderr = user_program.communicate(given_input)
+        else:
+            stdout = None
+            stderr = None
+            def target():
+                stdout, stderr = user_program.communicate(given_input)
+            thread = threading.Thread(target=target)
+            thread.start()
+            thread.join(timeout)
+            if thread.is_alive():
+                user_program.terminate()
+                thread.join()
+                return (stdout, stderr, None)
 
         return (stdout, stderr, user_program.returncode)
     finally:
