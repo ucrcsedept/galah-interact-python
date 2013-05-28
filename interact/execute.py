@@ -159,6 +159,8 @@ def run_program(files = None, given_input = "", run_func = None,
             :func:`default_run_func`.
     :param executable: If you don't need to compile any code you can pass a path
             to an executable that will be executed directly.
+    :param timeout: Specifies, in seconds, when process should be terminated.
+            ``returncode`` will be None if terminated forcefully.
     :returns: A three-tuple containing the result of the program's execution
             ``(stdout, stderr, returncode)``.
 
