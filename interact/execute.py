@@ -23,6 +23,7 @@ import os.path
 import interact.core
 import atexit
 import threading
+import fcntl
 
 # Create and set up cleanup code for the cache. The cache stores as keys a
 # sorted (alphabetically) tuple of the absolute file paths used to create the
@@ -114,7 +115,7 @@ def compile_program(files, flags = [], ignore_cache = False):
         shutil.rmtree(temp_dir)
         raise
 
-def default_run_func(executable, temp_dir):
+def default_run_func(executable, temp_dir, args = []):
     """
     Used by the :func:`run_program` to create a ``Popen`` object that is
     responsible for running the exectuable.
@@ -124,6 +125,7 @@ def default_run_func(executable, temp_dir):
             used as the current working directory. It will be deleted
             automatically at the end of the :func:`run_program` function. The
             executable will not be in the directory.
+    :param args: A list of arguments to give the executabe.
 
     This function may be overriden to override the default ``run_func`` value
     used in the :func:`run_program` function.
@@ -139,14 +141,15 @@ def default_run_func(executable, temp_dir):
     """
 
     return subprocess.Popen(
-        [executable],
+        [executable] + args,
         cwd = temp_dir,
         stdout = subprocess.PIPE,
-        stdin = subprocess.PIPE
+        stdin = subprocess.PIPE,
+        stderr = subprocess.PIPE
     )
 
 def run_program(files = None, given_input = "", run_func = None,
-        executable = None, timeout = None):
+        executable = None, timeout = None, args = []):
     """
     Runs a program made up of some code files by first compiling, then
     executing it.
@@ -161,6 +164,7 @@ def run_program(files = None, given_input = "", run_func = None,
             to an executable that will be executed directly.
     :param timeout: Specifies, in seconds, when process should be terminated.
             ``returncode`` will be None if terminated forcefully.
+    :param args: Gives arguments to the executable.
     :returns: A three-tuple containing the result of the program's execution
             ``(stdout, stderr, returncode)``.
 
@@ -187,21 +191,23 @@ def run_program(files = None, given_input = "", run_func = None,
     temp_dir = tempfile.mkdtemp()
 
     try:
-        user_program = run_func(executable, temp_dir)
+        user_program = run_func(executable, temp_dir, args=args)
         if timeout is None:
             stdout, stderr = user_program.communicate(given_input)
         else:
-            stdout = None
-            stderr = None
-            def target():
-                stdout, stderr = user_program.communicate(given_input)
-            thread = threading.Thread(target=target)
+            class Target:
+                def target(self):
+                    self.stdout, self.stderr = user_program.communicate(given_input)
+                    return
+            t = Target()
+            thread = threading.Thread(target=t.target)
             thread.start()
             thread.join(timeout)
             if thread.is_alive():
                 user_program.terminate()
                 thread.join()
-                return (stdout, stderr, None)
+                return (t.stdout, t.stderr, None)
+            return t.stdout, t.stderr, user_program.returncode
 
         return (stdout, stderr, user_program.returncode)
     finally:

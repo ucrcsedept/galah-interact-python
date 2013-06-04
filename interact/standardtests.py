@@ -37,7 +37,7 @@ import pretty
 import parse
 import execute
 
-def check_files_exist(*files):
+def check_files_exist(*files, **extra):
     """
     Checks to see if the given files provided as arguments exist. They must be
     files as defined by
@@ -46,6 +46,8 @@ def check_files_exist(*files):
     :param \*files: The files to check for existance. Note this is not a list,
                    rather you should pass in each file as a seperate arugment.
                    See the examples below.
+    :param \*\*extra: extra parameters. If extra["basename"] is True, then os.path.basename
+                      is applied to all filenames before printing.
     :returns: Returns a TestResult object that will be passing iff *all* of the
               files exist.
 
@@ -64,8 +66,11 @@ def check_files_exist(*files):
     be printed formats it specially as seen above)*
 
     """
-
-    missing_files = [i for i in files if not os.path.isfile(i)]
+	
+    if extra["basename"]:
+        missing_files = [os.path.basename(i) for i in files if not os.path.isfile(i)]
+    else:
+        missing_files = [i for i in files if not os.path.isfile(i)]
 
     result = core.TestResult(
         brief = "This test ensures that all of the necessary files are "
