@@ -39,6 +39,7 @@ import subprocess
 import os.path
 import distutils.core
 import capture
+from clang import cindex
 
 #: The absolute path to the swig executable. When this module is imported, the
 #: environmental variable ``PATH`` is searched for a file named ``swig``, this
@@ -167,17 +168,14 @@ def _generate_swig_interface(file_path, output_directory):
     # (minus extension) of the code file.
     module_name = _utils.file_name(file_path)
 
-    # -MM flag returns all dependencies needed to compile file.
-    gpp_process = subprocess.Popen(
-        ["g++", "-MM", file_path],
-        stdout = subprocess.PIPE,
-        stderr = subprocess.STDOUT
-    )
-    gpp_output = gpp_process.communicate()[0]
+    # Parse the source file's path and get the local includes.
+    index = cindex.Index.create()
+    tu = index.parse(file_path)
+    dependencies = [i.include.name for i in tu.get_includes() \
+                        if _utils.is_local_include(file_path, i.include.name)]
 
-    # Get dependencies, minus the .o file and the white space
-    gpp_output = gpp_output.split(":")[1].strip()
-    dependencies = [i.strip() for i in gpp_output.split(" ") if i.strip() != "\\"]
+    # Must always include the original source file as well.
+    dependencies.append(file_path)
 
     necessary_includes = []
     for include in dependencies:
