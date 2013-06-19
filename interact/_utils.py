@@ -103,4 +103,5 @@ def is_local_include(source_file_path, candidate_file_path):
     This is done by seeing if the candidate_file_path's directory is a
     descendant of the source_file_path's directory.
     """
-    return os.path.dirname(file_path) in os.path.dirname(i.include.name)
+    return os.path.dirname(source_file_path) in \
+        os.path.dirname(candidate_file_path)
