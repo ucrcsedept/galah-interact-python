@@ -88,3 +88,19 @@ def which(program_name):
             return possible_path
 
     return None
+
+import os
+import os.path
+def is_local_include(source_file_path, candidate_file_path):
+    """
+    Check if a file header is a local include relative to a source file.
+
+    :param source_file_path: The relative or absolute file path of the source.
+    :param candidate_file_path: The relative or absolute file path of the
+                                candidate.
+    :returns: True is the candidate file is a local include.
+
+    This is done by seeing if the candidate_file_path's directory is a
+    descendant of the source_file_path's directory.
+    """
+    return os.path.dirname(file_path) in os.path.dirname(i.include.name)
