@@ -105,3 +105,97 @@ def is_local_include(source_file_path, candidate_file_path):
     """
     return os.path.dirname(source_file_path) in \
         os.path.dirname(candidate_file_path)
+
+from clang import cindex
+Kind = cindex.CursorKind
+def discover_types(node, root_source_file, known_non_template_types=[],
+                   known_template_types={}):
+    """
+    Discover all extra types being used in the parsed source code.
+
+    :param node: The current node in this translation unit.
+    :param root_source_file: The relative or absolute file path of the source.
+    :param known_non_template_types: The non-templated types that are known so
+                                     far.
+    :param known_template_types: The template types that are known so far with
+                                 keys of template names and values of parameter
+                                 count.
+
+    :returns: A 2-tuple containing all known types, with non-templated types
+              first followed by templated types.
+
+    Recursively walks through the indexed source code to discover used types,
+    new classes, new templates (classes and functions), and instantiations.
+    This is useful for helping us automatically wrap template instances with
+    SWIG.
+    """
+    final_non_template_types = known_non_template_types
+    final_template_types = known_template_types
+
+    children = node.get_children()
+    for child in children:
+        child_file = child.location.file
+        if child_file is not None and \
+                is_local_include(root_source_file, child_file.name):
+            if child.kind in [Kind.CLASS_DECL, Kind.STRUCT_DECL]:
+                # Add new classes to non template types.
+                new_class_name = child.displayname
+                if new_class_name not in final_non_template_types:
+                    final_non_template_types.append(new_class_name)
+            elif child.kind == Kind.CLASS_TEMPLATE:
+                # Add new template types to templates.
+                new_template_name = child.spelling
+                if new_template_name not in final_template_types.keys():
+                    # Count the amount of type parameters to template
+                    types = [i for i in child.get_children() \
+                                 if i.kind == Kind.TEMPLATE_TYPE_PARAMETER]
+                    parameter_count = len(types)
+                    final_template_types[new_template_name] = parameter_count
+        
+        # Discover the types of my children.
+        types = discover_types(child, root_source_file,
+                               final_non_template_types, final_template_types)
+        final_non_template_types, final_template_types = types
+
+    return (final_non_template_types, final_template_types)
+
+import itertools
+def generate_template_wrappers(non_template_types, template_types,
+                               known_wrappers={}):
+    """
+    Combines template and non-template types into SWIG template wrappers.
+
+    :param non_template_types: A list of non_template_types to be considered.
+    :param template_types: A dictionary of template_types with SWIG wrappers
+                           as keys and C++ instances as values
+
+    :returns: A completed map of wrappers
+
+    This is done by taking the two lists and computing cartesian products
+    """
+    completed_wrappers = known_wrappers
+
+    argument_lengths = list(set([v for k,v in template_types.iteritems()]))
+    argument_combinations = []
+    # Compute cartesian products for necessary list sizes
+    for i in argument_lengths:
+        filtered_templates = [j[0] for j in template_types.iteritems() \
+                                if j[1] == i]
+
+        wrapper_list = [non_template_types] * i
+        wrapper_list.append(filtered_templates)
+        combination = itertools.product(*wrapper_list)
+        argument_combinations.append(combination)
+
+    # Add new wrappers to completed_wrappers
+    for combo in argument_combinations:
+        for i in combo:
+            wrapped_name = "".join([j.title() for j in i])
+            cpp_instance = "%s<%s>" % (
+                i[-1], ", ".join(i[:-1])
+            )
+        
+            if wrapped_name not in completed_wrappers.keys():
+                completed_wrappers[wrapped_name] = cpp_instance
+
+    return completed_wrappers
