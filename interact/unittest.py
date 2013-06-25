@@ -147,23 +147,6 @@ STD_INTERFACES = [
     "std_string.i", "std_vector.i", "std_sstream.i"
 ]
 
-# Template types that will always be given an interface along with the amount of template
-# parameters they can take.
-STL_TEMPLATES = {
-    "deque": 1, 
-    "list": 1, 
-    "map": 2,
-    "pair": 2,
-    "set": 1,
-    "vector": 1
-}
-
-# Basic types to expose to templates
-BASIC_TYPES = [
-    # Need to think of way to add support for `long long` or `long int`, etc
-    "char", "double", "float", "int", "long", "string"
-]
-
 # C++ Directives that expose extra functionality in the underlying C++ code.
 EXPOSURE_DIRECTIVES = [
     "#define private public", # Expose private member variables to module
@@ -189,8 +172,7 @@ def _generate_swig_interface(file_path, output_directory):
     index = cindex.Index.create()
 
     # Cut off a little time preprocessing by caching the included files.
-    tu = index.parse(file_path,
-                     options=cindex.TranslationUnit.PARSE_PRECOMPILED_PREAMBLE)
+    tu = index.parse(file_path)
     dependencies = [i.include.name for i in tu.get_includes() \
                         if _utils.is_local_include(file_path, i.include.name)]
 
@@ -209,11 +191,7 @@ def _generate_swig_interface(file_path, output_directory):
             if file_path not in include and os.path.isfile(include):
                 necessary_includes.append("#include \"%s\"" % (include))
 
-    types_tuple = _utils.discover_types(tu.cursor, tu.spelling,
-                                        BASIC_TYPES, STL_TEMPLATES)
-    final_non_templates, final_templates = types_tuple
-    template_wrappers = _utils.generate_template_wrappers(final_non_templates,
-                                                          final_templates)
+    templates = _utils.discover_template_instances(tu.cursor, tu.spelling)
 
     with open(os.path.join(output_directory, module_name + ".i"), "w") as f:
         f.write("%%module %s\n\n" % (module_name, ))
@@ -239,7 +217,7 @@ def _generate_swig_interface(file_path, output_directory):
             (include for include in necessary_includes if '<' not in include)
         for include in local_includes:
             f.write("%s\n" % include.replace("#", "%"))
-        for type_name, instance in template_wrappers.iteritems():
+        for type_name, instance in templates.iteritems():
             f.write("%%template(%s) %s;\n" % (type_name, instance))
 
     return module_name
