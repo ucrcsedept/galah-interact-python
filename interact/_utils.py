@@ -106,55 +106,98 @@ def is_local_include(source_file_path, candidate_file_path):
     return os.path.dirname(source_file_path) in \
         os.path.dirname(candidate_file_path)
 
+def swig_wrapper_name(template_name, template_arguments):
+    """
+    Constructs a template wrapper name to be used in SWIG template generation.
+
+    :param template_name: The name of the template itself.
+    :param template_arguments: The template arguments to be considered.
+
+    :returns: A template wrapper name needed by SWIG.
+
+    This combines a template name and all of its arguments into a CamelCase
+    pythonic class to be provided by the SWIG wrapper. The result will be in the
+    following format: Arg0...Argn-1TemplateName. For example, if the template
+    instance found in the C++ source is map<int, string>, the resulting wrapper
+    name would be IntStringMap in the generated python module. Note that order
+    matters and this is different from StringIntMap, which would be represented
+    in C++ as map<string, int>.
+    """
+    wrapped_arguments = [i.title() for i in template_arguments \
+                             if i != 'iterator']
+    wrapper_name = "".join(wrapped_arguments)
+    wrapper_name += template_name.title()
+    return wrapper_name
+
 from clang import cindex
 Kind = cindex.CursorKind
-def discover_types(node, root_source_file, known_non_template_types=[],
-                   known_template_types={}):
+Token = cindex.TokenKind
+def discover_template_instances(node, root_source_file, discovered_instances={}):
     """
-    Discover all extra types being used in the parsed source code.
+    Discover all template instances being used in the parsed source code.
 
     :param node: The current node in this translation unit.
     :param root_source_file: The relative or absolute file path of the source.
-    :param known_non_template_types: The non-templated types that are known so
-                                     far.
-    :param known_template_types: The template types that are known so far with
-                                 keys of template names and values of parameter
-                                 count.
 
-    :returns: A 2-tuple containing all known types, with non-templated types
-              first followed by templated types.
+    :returns: A map containing discovered template instances, with
+              the SWIG wrapper name as the key and the C++ instance
+              as the value.
 
-    Recursively walks through the indexed source code to discover used types,
-    new classes, new templates (classes and functions), and instantiations.
-    This is useful for helping us automatically wrap template instances with
-    SWIG.
+    Recursively walks through the indexed source code to discover template
+    instances. This is useful for helping us automatically wrap template
+    instances with SWIG.
     """
-    final_non_template_types = known_non_template_types
-    final_template_types = known_template_types
-
+    template_instances = discovered_instances
     children = node.get_children()
     for child in children:
         child_file = child.location.file
         if child_file is not None and \
                 is_local_include(root_source_file, child_file.name):
-            if child.kind in [Kind.CLASS_DECL, Kind.STRUCT_DECL]:
-                # Add new classes to non template types.
-                new_class_name = child.displayname
-                if new_class_name not in final_non_template_types:
-                    final_non_template_types.append(new_class_name)
-            elif child.kind == Kind.CLASS_TEMPLATE:
-                # Add new template types to templates.
-                new_template_name = child.spelling
-                if new_template_name not in final_template_types.keys():
-                    # Count the amount of type parameters to template
-                    types = [i for i in child.get_children() \
-                                 if i.kind == Kind.TEMPLATE_TYPE_PARAMETER]
-                    parameter_count = len(types)
-                    final_template_types[new_template_name] = parameter_count
+            if child.kind in [Kind.VAR_DECL, Kind.FIELD_DECL,
+                              Kind.PARM_DECL]:
+                # SWIG automatically creates iterators.
+                template_inst = child.type.get_declaration().displayname
+                if 'iterator' in template_inst:
+                    continue
+
+                # If this variable declaration uses a template, it will be
+                # the first child.
+                try:
+                    first_child = child.get_children().next()
+                    if first_child.kind != Kind.TEMPLATE_REF:
+                        raise StopIteration
+
+                    # Pull out type name and arguments from tokens.
+                    # Ignore all qualifiers and find identifiers.
+                    tokens = child.get_tokens()
+                    for token in tokens:
+                        if token.kind == Token.IDENTIFIER:
+                            break
+
+                    template_type = token.spelling
+                    arguments = []
+
+                    # Pull out built-in and declared template type arguments.
+                    for token in tokens:
+                        if token.kind in [Token.IDENTIFIER, Token.KEYWORD]:
+                            arguments.append(token.spelling)
+                        elif token.spelling == '>':
+                            # Finished looking at template arguments
+                            break
+
+                    # Construct SWIG template name and associate with C++
+                    # instance if it doesn't already exist.
+                    swig_template_name = swig_wrapper_name(template_type,
+                                                           arguments)
+
+                    if swig_template_name not in template_instances.keys():
+                        template_instances[swig_template_name] = template_inst
+                except StopIteration:
+                    continue
         
         # Discover the types of my children.
-        types = discover_types(child, root_source_file,
-                               final_non_template_types, final_template_types)
-        final_non_template_types, final_template_types = types
+        template_instances = discover_template_instances(child,
+                                                         root_source_file,
+                                                         template_instances)
 
-    return (final_non_template_types, final_template_types)
+    return template_instances
