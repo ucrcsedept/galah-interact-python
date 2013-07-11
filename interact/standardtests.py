@@ -67,7 +67,7 @@ def check_files_exist(*files, **extra):
 
     """
 	
-    if extra["basename"]:
+    if extra.get("basename", False):
         missing_files = [os.path.basename(i) for i in files if not os.path.isfile(i)]
     else:
         missing_files = [i for i in files if not os.path.isfile(i)]

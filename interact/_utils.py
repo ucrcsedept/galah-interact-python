@@ -88,3 +88,27 @@ def which(program_name):
             return possible_path
 
     return None
+
+import os
+import subprocess
+
+def sed_call(file_in, file_out, *args):
+    """
+    Calls ``sed``.
+    
+    :param file_in: The name of the input file.
+    :param file_out: The name of the output file.
+    :param *args: Arguments to pass to ``sed``.
+    """
+    
+    with open(file_in, "r") as read:
+        with open(file_out, "w") as out:
+            job = subprocess.Popen(
+                ["sed"] + list(args),
+                stdout = out,
+                stdin = read
+            )
+            job.wait()
+            if job.returncode != 0:
+                raise Exception("sed failed")
+    return
