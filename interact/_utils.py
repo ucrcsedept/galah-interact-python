@@ -129,9 +129,51 @@ def swig_wrapper_name(template_name, template_arguments):
     wrapper_name += template_name.title()
     return wrapper_name
 
+import re
+def filter_non_type_arguments(template_instance, non_type_args=[]):
+    """
+    Filters non-type arguments from a template instance.
+
+    :param template_instance: A fully expanded template instance.
+    :param non_type_args: Expected non-type arguments to be filtered out.
+
+    :returns: An expanded template instance excluding non-type arguments.
+
+    This steps through the template_instance's arguments and if any of the
+    arguments are in the list of non_type_args, they will be excluded.
+    For example, if the template_instance is
+    `std::set<int, std::allocator<int>, std::less<int> >` and
+    `std::allocator` and `std::less` are considered to be non_type_args,
+    the resulting template will be std::set<int>.
+    """
+    # Get template type name and arguments
+    match = re.search('(\S*)<(.*)>', template_instance)
+    if not match:
+        return template_instance
+    template_name = match.group(1)
+    template_args = match.group(2).split(', ')
+
+    # Filter out non-type parameters.
+    type_parameters = []
+    for arg in template_args:
+        angle_pos = arg.find('<')
+        if angle_pos == -1 or arg[:angle_pos] not in non_type_args:
+            type_parameters.append(arg)
+
+    # Combine template with type parameters.
+    filtered_instance = '%s<%s >' % (template_name, ', '.join(type_parameters))
+    return filtered_instance
+
 from clang import cindex
 Kind = cindex.CursorKind
 Token = cindex.TokenKind
+
+# A list of class template arguments that are not types.
+# These include operator classes and memory allocation classes.
+STD_NON_TYPES = [
+    "std::allocator", "std::less", "std::less_equal", "std::greater",
+    "std::greater_equal", "std::equal_to", "std::not_equal_to"
+]
 def discover_template_instances(node, root_source_file, discovered_instances={}):
     """
     Discover all template instances being used in the parsed source code.
@@ -159,6 +201,9 @@ def discover_template_instances(node, root_source_file, discovered_instances={})
                 template_inst = child.type.get_declaration().displayname
                 if 'iterator' in template_inst:
                     continue
+
+                template_inst = filter_non_type_arguments(template_inst,
+                                                          STD_NON_TYPES)
 
                 # If this variable declaration uses a template, it will be
                 # the first child.
