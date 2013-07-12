@@ -197,11 +197,17 @@ def discover_template_instances(node, root_source_file, discovered_instances={})
                 is_local_include(root_source_file, child_file.name):
             if child.kind in [Kind.VAR_DECL, Kind.FIELD_DECL,
                               Kind.PARM_DECL]:
-                # SWIG automatically creates iterators.
                 template_inst = child.type.get_declaration().displayname
+
+                # SWIG automatically creates iterators.
                 if 'iterator' in template_inst:
                     continue
 
+                # If the template belongs to a namespace, prepend it to the type
+                namespace = child.type.get_declaration().lexical_parent
+                if namespace is not None and namespace.kind == Kind.NAMESPACE:
+                    template_inst = '%s::%s' % (namespace.displayname,
+                                                template_inst)
                 template_inst = filter_non_type_arguments(template_inst,
                                                           STD_NON_TYPES)
 
