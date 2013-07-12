@@ -205,6 +205,12 @@ def _generate_swig_interface(file_path, output_directory):
         # file.
         f.write("\n".join(EXPOSURE_DIRECTIVES) + "\n")
         f.write("using namespace std;\n\n")
+        
+        # Define used STL templates before making all classes public.
+        for type_name, instance in templates.iteritems():
+            if 'std::' in instance:
+                f.write("%%template(%s) %s;\n" % (type_name, instance))
+            
         f.write("%{\n")
         f.write("\n".join(EXPOSURE_DIRECTIVES) + "\n")
         for include in necessary_includes:
@@ -217,8 +223,11 @@ def _generate_swig_interface(file_path, output_directory):
             (include for include in necessary_includes if '<' not in include)
         for include in local_includes:
             f.write("%s\n" % include.replace("#", "%"))
+
+        # Define other, non-STL templates used after they are declared.
         for type_name, instance in templates.iteritems():
-            f.write("%%template(%s) %s;\n" % (type_name, instance))
+                if 'std::' not in instance:
+                    f.write("%%template(%s) %s;\n" % (type_name, instance))
 
     return module_name
 
