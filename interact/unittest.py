@@ -226,8 +226,8 @@ def _generate_swig_interface(file_path, output_directory):
 
         # Define other, non-STL templates used after they are declared.
         for type_name, instance in templates.iteritems():
-                if 'std::' not in instance:
-                    f.write("%%template(%s) %s;\n" % (type_name, instance))
+            if 'std::' not in instance:
+                f.write("%%template(%s) %s;\n" % (type_name, instance))
 
     return module_name
 
