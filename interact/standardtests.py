@@ -158,6 +158,8 @@ def check_indentation(files, max_score = 10, allow_negative = False):
     for current_file in files:
         with open(current_file) as f:
             code = f.read()
+        if code == "":
+            continue
 
         # Transform tjhe code into a list of Line objects
         lines = parse.Line.make_lines(code.splitlines())
